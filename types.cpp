@@ -17,8 +17,9 @@
 #include <QApplication>
 
 AbstractView::AbstractView(std::string p, std::string pat): path(p), pattern(pat){
+  osi = new OSInterface();
   try{
-    osi.getDirInfo(path, pattern);
+    osi->getDirInfo(path, pattern);
   }catch(OSException *ex){
     ex->process();
   }
@@ -84,11 +85,16 @@ void MTree::buildTree(std::string root, QStandardItem *it){
     }
 }
 
+AbstractView *MTree::clone(){
+  if(path.empty()) return nullptr;
+  MTree *tmp = new MTree(path, pattern, recursive);
+  return tmp;
+}
+
 void MTree::init(std::string p, std::string pat, bool rec){
   recursive = rec;
-  osi.dirs.clear();
-  osi.getDirInfo(p, pat);
-  content = new MyTreeView();
+  osi->dirs.clear();
+  osi->getDirInfo(p, pat);
   content->path = p;
   QStandardItemModel *model = new QStandardItemModel(0, 3);
   QStandardItem *item;
@@ -96,7 +102,7 @@ void MTree::init(std::string p, std::string pat, bool rec){
   int row = 0;
   if(p[p.size() - 1] == '/')
     p = p.substr(0,p.size() - 1);
-  for(auto &e : osi.dirs){
+  for(auto &e : osi->dirs){
       if((e.second->name == ".") || (e.second->name == "..")) continue;
       qlis.clear();
       std::stringstream ss;
@@ -127,5 +133,6 @@ void MTree::init(std::string p, std::string pat, bool rec){
 }
 
 MTree::MTree(std::string p, std::string pat, bool rec): AbstractView(p, pat), recursive(rec){
+  content = new MyTreeView();
   init(p, pat, rec);
 }

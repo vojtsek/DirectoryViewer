@@ -2,6 +2,7 @@
 #define OSINTERFACE_H
 
 #include "myexceptions.h"
+#include "types.h"
 #include <map>
 #include <exception>
 #include <string>
@@ -22,6 +23,7 @@ public:
 #endif
   OSInterface();
   void getDirInfo(std::string, std::string);
+  static void copy(cmd_info_T &);
   static std::string getCWD();
   static std::string getPrefix();
   static bool isDir(std::string);

@@ -42,11 +42,12 @@ public:
   enum {TREE, LIST, ICON };
   int view_type;
 
+  OpenedListHandle() { initLayout(".");}
   OpenedListHandle(std::string, QWidget *parent = 0);
   OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
   void delGraphics();
   void changeLayout(int);
-  void initLayout(std::string);
+  void initLayout(std::string, MTree *tree = 0);
   virtual ~OpenedListHandle();
 
 public slots:

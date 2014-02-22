@@ -31,7 +31,8 @@ HEADERS  += mainwindow.h \
     openedlisthandle.h \
     functions.h \
     mylineedit.h \
-    mytreeview.h
+    mytreeview.h \
+    stylesheets.h
 
 FORMS    += mainwindow.ui
 

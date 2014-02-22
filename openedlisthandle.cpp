@@ -3,6 +3,7 @@
 #include "mainhandler.h"
 #include "mylineedit.h"
 #include "osinterface.h"
+#include "stylesheets.h"
 #include "types.h"
 
 #include <dirent.h>
@@ -27,30 +28,29 @@
 
 void OpenedListHandle::changeLayout(int type){
   view_type = type;
+  bool was_focused = content->is_focused;
   QObject::disconnect(content, 0, this, 0);
-  view->content->deleteLater();
+  delete view->content->model();
   switch (type) {
     case TREE:      
       ((MTree *) view)->init(path, le2->text().toStdString(), true);
       content = view->content;
-      h_layout2->removeWidget(sb);
       h_layout2->addWidget(content);
-      h_layout2->addWidget(sb);
       break;
      case LIST:
       ((MTree *) view)->init(path, le2->text().toStdString(), false);
       content = view->content;
-      h_layout2->removeWidget(sb);
       h_layout2->addWidget(content);
-      h_layout2->addWidget(sb);
       break;
     default:
       break;
     }
-  if(content->is_focused)
+  if(was_focused){
     content->setFocus();
+    content->focus();
+    }
   QObject::connect(content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-  //v_layout->update();
+  QObject::connect(content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
 }
 
 void OpenedListHandle::toTree(){
@@ -79,6 +79,7 @@ void OpenedListHandle::stepUp(){
     le1->setText(QString::fromStdString(cont));
   else
     le1->setText(QString::fromStdString(OSInterface::getPrefix()));
+  content->setFocus();
 }
 
 void OpenedListHandle::pathChanged(){
@@ -113,7 +114,7 @@ void OpenedListHandle::itemPressed(const QModelIndex &mi){
 
 
 
-void OpenedListHandle::initLayout(std::string p){
+void OpenedListHandle::initLayout(std::string p, MTree *tree){
   v_layout = new QVBoxLayout();
   h_layout1 = new QHBoxLayout();
   h_layout2 = new QHBoxLayout();
@@ -124,20 +125,24 @@ void OpenedListHandle::initLayout(std::string p){
   up_btt = new ButtonHandle<OpenedListHandle>(Qt::Key_F10, "UP", &OpenedListHandle::stepUp);
   up_btt->btt->setMaximumWidth(30);
   up_btt->btt->setFocusPolicy(Qt::ClickFocus);
+  up_btt->btt->setStyleSheet(btt_style);
   le1 = new MyLineEdit();
   le1->setFocusPolicy(Qt::ClickFocus);
+  le1->setStyleSheet(lineedit_style);
   le2 = new QLineEdit();
+  le2->setStyleSheet(lineedit_style);
   le2->setFocusPolicy(Qt::ClickFocus);
   le1->setText(QString::fromStdString(p));
   le2->setMaximumWidth(70);
   le2->setText("*");
-  view = new MTree(p,le2->text().toStdString(), false);
   view_type = LIST;
+  if(!tree)
+      view = new MTree(p,le2->text().toStdString(), false);
+  else
+    view = tree;
   content = view->content;
- // QObject::connect(content, &MyTreeView::focused, this, &OpenedListHandle::focusedNew);
- // QObject::connect(content, &MyTreeView::unfocused, this, &OpenedListHandle::focusedNew);
+  QObject::connect(content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
   tb = new QToolBar();
-  sb = new QScrollBar();
   h_layout1->addWidget(le1);
   h_layout1->addWidget(le2);
   h_layout1->addWidget(up_btt->btt);
@@ -147,10 +152,10 @@ void OpenedListHandle::initLayout(std::string p){
   QObject::connect(le1, &MyLineEdit::focused, this, &OpenedListHandle::setSelection);
   QObject::connect(content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
   h_layout2->addWidget(content);
-  h_layout2->addWidget(sb);
   for(auto &a : tool_btts){
       a.second.btt->setMaximumWidth(150);
       a.second.btt->setFocusPolicy(Qt::NoFocus);
+      a.second.btt->setStyleSheet(btt_style);
         h_layout3->addWidget(a.second.btt);
         QObject::connect(a.second.btt, &QPushButton::clicked, this, a.second.fnc);
     }
@@ -165,7 +170,6 @@ OpenedListHandle::OpenedListHandle(std::string p, QWidget *parent):QWidget(paren
   }
 
 void OpenedListHandle::delGraphics(){
-  delete sb;
   delete tb;
   delete le1;
   delete le2;
@@ -185,10 +189,11 @@ OpenedListHandle::~OpenedListHandle(){
 }
 
 OpenedListHandle::OpenedListHandle(const OpenedListHandle &o, QWidget *parent): QWidget(parent){
-  in_layout = false; //musi se pridat znovu
+  in_layout = false;
   view_type = o.view_type;
   path = o.path;
-  initLayout(path);
+  MTree *new_view = (MTree *) o.view->clone();
+  initLayout(path, new_view);
   content->is_focused = o.content->is_focused;
   content->marked = o.content->marked;
   if(content->is_focused)

@@ -3,6 +3,7 @@
 #include "ui_mainwindow.h"
 #include "osinterface.h"
 #include "openedlisthandle.h"
+#include "stylesheets.h"
 
 #include <QPushButton>
 #include <QComboBox>
@@ -52,6 +53,7 @@ void MainWindow::prepareLayout(){
   for(auto &a : handler->tool_btts){
       ui->mainToolBar->addWidget(a.second.btt);
       a.second.btt->setFocusPolicy(Qt::ClickFocus);
+      a.second.btt->setStyleSheet(btt_style);
       QObject::connect(a.second.btt, &QPushButton::clicked, handler, a.second.fnc);
   }
 

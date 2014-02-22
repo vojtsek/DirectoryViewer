@@ -29,6 +29,16 @@ bool OSInterface::isDir(std::string path){
   return true;
 }
 
+void OSInterface::copy(cmd_info_T &ci){
+  for(auto &src : ci.source_files){
+      for(auto &a : ci.destination_files){
+          for(auto &dstf : a){
+              std::cout << "Copy " << src << " to: " << dstf << std::endl;
+            }
+        }
+    }
+}
+
 void OSInterface::getDirInfo(std::string path, std::string pattern){
   DIR *dir;
   if(path == "/mnt") return;
@@ -42,16 +52,17 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
     }
   struct dirent *entry = new struct dirent();
   struct stat *finfo = new struct stat();
-  std::string abs_path(path);
+  std::string abs_path(path), name;
   std::map<std::string,struct dirent*> entries;
   dirEntryT *de;
   while((entry = readdir(dir))){
-      if(!matchExpression(std::string(entry->d_name), pattern)) continue;
+      name = entry->d_name;
+      if(!matchExpression(name, pattern)) continue;
       de = new dirEntryT();
-      stat((abs_path + "/" + std::string(entry->d_name)).c_str(), finfo);
+      stat((abs_path + "/" + name).c_str(), finfo);
       if(finfo == NULL)
-        throw new OSException(std::string(entry->d_name), std::string("failed to read file info."));
-      de->name = std::string(entry->d_name);
+        throw new OSException(name, std::string("failed to read file info."));
+      de->name = name;
       if(S_ISLNK(finfo->st_mode)){
           continue;
       }else if(S_ISREG(finfo->st_mode)){

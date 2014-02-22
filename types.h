@@ -1,6 +1,7 @@
 
 #include "mainhandler.h"
 #include "mytreeview.h"
+#include "osinterface.h"
 
 #include <dirent.h>
 #include <QWidget>
@@ -19,14 +20,15 @@
 #include <QToolBar>
 #include <QObject>
 #include <map>
+#include <vector>
 #include <string>
-#include "osinterface.h"
 
 #ifndef TYPES_H
 #define TYPES_H
 
 
 class MainHandler;
+class OSInterface;
 
 template <class T>
 struct ButtonHandle{
@@ -37,13 +39,20 @@ struct ButtonHandle{
   ButtonHandle(Qt::Key k, std::string l, void (T::*f)(void)): keycode (k), label(l){ btt = new QPushButton(QString::fromStdString(l)); fnc = f;}
 };
 
+typedef struct{
+  std::vector<std::string> source_files;
+  std::vector<std::vector<std::string>> destination_files;
+  enum {COPY, MOVE, VIEW };
+  int cmd;
+} cmd_info_T;
 
 class AbstractView{
 public:
   MyTreeView *content;
   std::string path, pattern;
-  OSInterface osi;
+  OSInterface * osi;
   AbstractView(std::string, std::string);
+  virtual AbstractView *clone() = 0;
   virtual ~AbstractView(){
     delete content;
   }
@@ -59,12 +68,12 @@ public:
 
 class MTree : public AbstractView{
 private:
-  std::string path;
   void buildTree(std::string, QStandardItem *it);
 public:
   bool recursive;
   void init(std::string, std::string, bool);
-  explicit MTree(std::string, std::string, bool);
+  virtual AbstractView *clone();
+  MTree(std::string, std::string, bool);
   virtual ~MTree() {}
 };
 
