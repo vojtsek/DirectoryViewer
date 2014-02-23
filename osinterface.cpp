@@ -31,10 +31,8 @@ bool OSInterface::isDir(std::string path){
 
 void OSInterface::copy(cmd_info_T &ci){
   for(auto &src : ci.source_files){
-      for(auto &a : ci.destination_files){
-          for(auto &dstf : a){
-              std::cout << "Copy " << src << " to: " << dstf << std::endl;
-            }
+      for(auto &dstf : ci.destination_files[src]){
+          std::cout << "Copy " << src << " to: " << dstf << std::endl;
         }
     }
 }

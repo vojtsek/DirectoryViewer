@@ -15,6 +15,7 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 #include <QApplication>
+#include <QPersistentModelIndex>
 
 AbstractView::AbstractView(std::string p, std::string pat): path(p), pattern(pat){
   osi = new OSInterface();
@@ -24,32 +25,6 @@ AbstractView::AbstractView(std::string p, std::string pat): path(p), pattern(pat
     ex->process();
   }
 }
-
-/*MyTableView::MyTableView(std::string p, std::string pat): AbstractView(p, pat){
-  content = new QTableView();
-  ((QTableView*)content)->setShowGrid(false);
-  ((QTableView*)content)->horizontalHeader()->hide();
-  QStandardItemModel *model = new QStandardItemModel(0, 3);
-  QStandardItem *item;
-  int row = 0;
-  for(auto &e : osi.dirs){
-      std::stringstream ss;
-      std::string type;
-      item = new QStandardItem(QString::fromStdString(e.second->name));
-      item->setEditable(false);
-      model->setItem(row, 0, item);
-      item = new QStandardItem(QString::fromStdString(e.second->type_name));
-      item->setEditable(false);
-      model->setItem(row, 1, item);
-      ss << e.second->byte_size;
-      item = new QStandardItem(QString::fromStdString(ss.str()));
-      item->setEditable(false);
-      model->setItem(row, 2, item);
-      ++row;
-    }
-  ((QTableView*)content)->setModel(model);
-  ((QTableView*)content)->setColumnWidth(0, 300);
-}*/
 
 void MTree::buildTree(std::string root, QStandardItem *it){
   OSInterface os;
@@ -87,7 +62,18 @@ void MTree::buildTree(std::string root, QStandardItem *it){
 
 AbstractView *MTree::clone(){
   if(path.empty()) return nullptr;
-  MTree *tmp = new MTree(path, pattern, recursive);
+  MTree *tmp = new MTree(content->path, pattern, recursive);
+  tmp->content->multi_selection = content->multi_selection;
+  QBrush brr(QColor(0, 159, 255));
+  for(int i = 0; i < ((QStandardItemModel *)((MyTreeView *)tmp->content)->model())->rowCount(); ++i){
+      QStandardItem *it = ((QStandardItemModel *)((MyTreeView *)tmp->content)->model())->item(i);
+      if(content->multi_selection.find(path + OSInterface::dir_sep + it->text().toStdString()) != content->multi_selection.end()){
+        it->setForeground(brr);
+        }
+    }
+  /*((MyTreeView *)tmp->content)->selectionModel()->select(QItemSelection (((MyTreeView *)tmp->content)->model()->index (5, 0), ((MyTreeView *)tmp->content)->model()->index (5, 2)), QItemSelectionModel::SelectCurrent);
+  QPersistentModelIndex nextIndex = ((MyTreeView *)tmp->content)->indexAt(QPoint(5, 0));
+  ((MyTreeView *)tmp->content)->setCurrentIndex(nextIndex);*/
   return tmp;
 }
 
@@ -125,11 +111,11 @@ void MTree::init(std::string p, std::string pat, bool rec){
       ++row;
     }
   QHeaderView *hv = new QHeaderView(Qt::Horizontal);
-  ((QTreeView*)content)->setModel(model);
-  ((QTreeView*)content)->setSelectionBehavior(QTreeView::SelectRows);
-  ((QTreeView*)content)->setHeader(hv);
-  ((QTreeView*)content)->sortByColumn(1,Qt::AscendingOrder);
-  ((QTreeView*)content)->setColumnWidth(0, 300);
+  ((MyTreeView*)content)->setModel(model);
+  ((MyTreeView*)content)->setSelectionBehavior(QTreeView::SelectRows);
+  ((MyTreeView*)content)->setHeader(hv);
+  ((MyTreeView*)content)->sortByColumn(1,Qt::AscendingOrder);
+  ((MyTreeView*)content)->setColumnWidth(0, 300);
 }
 
 MTree::MTree(std::string p, std::string pat, bool rec): AbstractView(p, pat), recursive(rec){

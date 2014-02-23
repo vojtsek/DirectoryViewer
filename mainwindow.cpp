@@ -105,7 +105,7 @@ void MainWindow::refreshMainLayout(bool removing){
           else
             ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 1);
           a.content->setFocus();
-          QObject::connect(a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
+          QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
         }
       ++col;
     //  if(count != handler->opened_lists.size())

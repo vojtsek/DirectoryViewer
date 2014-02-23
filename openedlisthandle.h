@@ -33,7 +33,7 @@ public:
   MyLineEdit *le1;
   ButtonHandle<OpenedListHandle> *up_btt;
   QLineEdit *le2;
-  MyTreeView *content;
+  MyViewType *content;
   AbstractView *view;
   QToolBar *tb;
   QScrollBar *sb;

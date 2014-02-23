@@ -29,18 +29,18 @@
 void OpenedListHandle::changeLayout(int type){
   view_type = type;
   bool was_focused = content->is_focused;
-  QObject::disconnect(content, 0, this, 0);
-  delete view->content->model();
+  QObject::disconnect((MyTreeView *)content, 0, this, 0);
+  delete ((MyTreeView *) view->content)->model();
   switch (type) {
     case TREE:      
       ((MTree *) view)->init(path, le2->text().toStdString(), true);
       content = view->content;
-      h_layout2->addWidget(content);
+      h_layout2->addWidget((MyTreeView *)content);
       break;
      case LIST:
       ((MTree *) view)->init(path, le2->text().toStdString(), false);
       content = view->content;
-      h_layout2->addWidget(content);
+      h_layout2->addWidget((MyTreeView *)content);
       break;
     default:
       break;
@@ -49,8 +49,8 @@ void OpenedListHandle::changeLayout(int type){
     content->setFocus();
     content->focus();
     }
-  QObject::connect(content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-  QObject::connect(content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
+  QObject::connect((MyTreeView *)content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
+  QObject::connect((MyTreeView *)content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
 }
 
 void OpenedListHandle::toTree(){
@@ -141,7 +141,7 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   else
     view = tree;
   content = view->content;
-  QObject::connect(content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
+  QObject::connect((MyTreeView *)content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
   tb = new QToolBar();
   h_layout1->addWidget(le1);
   h_layout1->addWidget(le2);
@@ -150,8 +150,8 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   QObject::connect(le2, &QLineEdit::textChanged, this, &OpenedListHandle::patternChanged);
   QObject::connect(le1, &QLineEdit::textChanged, this, &OpenedListHandle::pathChanged);
   QObject::connect(le1, &MyLineEdit::focused, this, &OpenedListHandle::setSelection);
-  QObject::connect(content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-  h_layout2->addWidget(content);
+  QObject::connect((MyTreeView *)content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
+  h_layout2->addWidget((MyTreeView *)content);
   for(auto &a : tool_btts){
       a.second.btt->setMaximumWidth(150);
       a.second.btt->setFocusPolicy(Qt::NoFocus);

@@ -1,23 +1,26 @@
 #ifndef MYTREEVIEW_H
 #define MYTREEVIEW_H
 
+#include "types.h"
 #include <QTreeView>
 #include <string>
 #include <set>
 
-class MyTreeView : public QTreeView
+class MyTreeView : public QTreeView, public MyViewType
 {
   Q_OBJECT
 public:
-  bool is_focused, marked;
-  std::string path;
-  std::set<std::string> multi_selection;
-  explicit MyTreeView(QWidget *p = 0): is_focused(false), marked(false), path(""), QTreeView(p) {}
+  explicit MyTreeView(QWidget *p = 0): MyViewType(), QTreeView(p) {
+    setSelectionBehavior(QAbstractItemView::SelectRows);
+  }
+  MyTreeView(const MyTreeView&);
+  virtual ~MyTreeView() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   std::string getSelected();
-  void unFocus();
-  void focus();
+  virtual void unFocus();
+  virtual void setFocus();
+  virtual void focus();
   void mark(bool);
   void changeSelection();
   inline int getSelIdx();

@@ -20,7 +20,7 @@
 #include <QToolBar>
 #include <QObject>
 #include <map>
-#include <vector>
+#include <set>
 #include <string>
 
 #ifndef TYPES_H
@@ -40,15 +40,28 @@ struct ButtonHandle{
 };
 
 typedef struct{
-  std::vector<std::string> source_files;
-  std::vector<std::vector<std::string>> destination_files;
+  std::set<std::string> source_files, paths;
+  std::map<std::string,std::set<std::string>> destination_files;
   enum {COPY, MOVE, VIEW };
   int cmd;
 } cmd_info_T;
 
+class MyViewType{
+public:
+  std::set<std::string> multi_selection;
+  bool is_focused, marked;
+  std::string path;
+  virtual std::string getSelected() = 0;
+  virtual void setFocus() = 0;
+  virtual void unFocus() = 0;
+  virtual void focus() = 0;
+  MyViewType(): is_focused(false), marked(false), path("") {}
+  virtual ~MyViewType() {}
+};
+
 class AbstractView{
 public:
-  MyTreeView *content;
+  MyViewType *content;
   std::string path, pattern;
   OSInterface * osi;
   AbstractView(std::string, std::string);

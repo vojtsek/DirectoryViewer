@@ -1,9 +1,11 @@
 #include "mytreeview.h"
 #include "osinterface.h"
+#include "types.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
 #include <QTreeView>
 #include <QStandardItemModel>
+#include <QPersistentModelIndex>
 #include <QAbstractItemView>
 #include <QBrush>
 #include <QStandardItem>
@@ -16,12 +18,17 @@ int MyTreeView::getSelIdx(){
 
 void MyTreeView::focusInEvent(QFocusEvent *e){
   emit(focused());
-  if(selectedIndexes().empty()){
-  setSelectionBehavior(QAbstractItemView::SelectRows);
-  selectionModel()->select(QItemSelection (model()->index (0, 0), model()->index (0, 2)), QItemSelectionModel::Select);
+  if(model()){
+      if(selectedIndexes().empty()){
+          QPersistentModelIndex sel_idx = indexAt(QPoint(0, 0));
+          setCurrentIndex(sel_idx);
+        }
     }
   focus();
 }
+
+void MyTreeView::setFocus(){ QTreeView::setFocus(); }
+
 
 std::string MyTreeView::getSelected(){
   //co kdyz je empty
