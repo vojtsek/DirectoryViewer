@@ -24,6 +24,7 @@ public:
   OSInterface();
   void getDirInfo(std::string, std::string);
   static void copy(cmd_info_T &);
+  static void doCopy(std::string &, std::string &);
   static std::string getCWD();
   static std::string getPrefix();
   static bool isDir(std::string);

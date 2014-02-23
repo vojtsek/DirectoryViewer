@@ -135,6 +135,7 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   le1->setText(QString::fromStdString(p));
   le2->setMaximumWidth(70);
   le2->setText("*");
+  tb = new QToolBar();
   view_type = LIST;
   if(!tree)
       view = new MTree(p,le2->text().toStdString(), false);
@@ -156,9 +157,10 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
       a.second.btt->setMaximumWidth(150);
       a.second.btt->setFocusPolicy(Qt::NoFocus);
       a.second.btt->setStyleSheet(btt_style);
-        h_layout3->addWidget(a.second.btt);
+        tb->addWidget(a.second.btt);
         QObject::connect(a.second.btt, &QPushButton::clicked, this, a.second.fnc);
     }
+  h_layout3->addWidget(tb);
   v_layout->addLayout(h_layout1);
   v_layout->addLayout(h_layout2);
   v_layout->addLayout(h_layout3);
@@ -170,7 +172,6 @@ OpenedListHandle::OpenedListHandle(std::string p, QWidget *parent):QWidget(paren
   }
 
 void OpenedListHandle::delGraphics(){
-  delete tb;
   delete le1;
   delete le2;
   delete view;
@@ -178,6 +179,7 @@ void OpenedListHandle::delGraphics(){
   for(auto &a : tool_btts){
       delete a.second.btt;
     }
+  delete tb;
   delete h_layout1;
   delete h_layout2;
   delete h_layout3;

@@ -33,7 +33,6 @@ const QString unfocused_list_style = "QTreeView {"
 
 const QString marked_list_style = "QTreeView {"
     + list_style +
-    "selection-background-color:#fff;"
     "background:#efe;"
     "color:#000;border: 1px solid #09b;}";
 #endif // STYLESHEETS_H

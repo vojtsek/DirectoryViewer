@@ -11,15 +11,18 @@ class OpenedListHandle;
 class MainHandler : public QObject
 {
   Q_OBJECT
+  void prepare_cmd(cmd_info_T &, bool &, bool &);
 public:
-  int col_count;
-  unsigned int max_lists;
+  unsigned int max_lists, col_count, init_count;
+  std::string init_dir;
   std::map<Qt::Key, ButtonHandle<MainHandler>> tool_btts;
   std::vector<OpenedListHandle> opened_lists;
   QGridLayout *main_grid;
   explicit MainHandler(QObject *parent = 0);
 signals:
   void ch_list(bool);
+  void confirm(std::string, cmd_info_T &);
+  void error(std::string &);
 
 public slots:
   void copy();

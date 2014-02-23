@@ -52,13 +52,14 @@ void MyTreeView::changeSelection(){
 void MyTreeView::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_M)
     mark(!marked);
-  if(e->key() == Qt::Key_S)
+  else if(e->key() == Qt::Key_S)
     changeSelection();
-  if(e->key() == Qt::Key_Backspace){
+  else if(e->key() == Qt::Key_Backspace){
       emit(stepup());
       setFocus();
     }
-  QTreeView::keyPressEvent(e);
+  else
+    QTreeView::keyPressEvent(e);
 }
 
 void MyTreeView::focus(){

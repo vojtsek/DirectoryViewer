@@ -26,6 +26,8 @@ private:
  public slots:
   void refreshMainLayout(bool all);
   void updateFocus();
+  void confirm(std::string, cmd_info_T &);
+  void error(std::string &);
 };
 
 #endif // MAINWINDOW_H

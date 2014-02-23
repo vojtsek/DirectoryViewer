@@ -7,6 +7,7 @@
 
 #include <QPushButton>
 #include <QComboBox>
+#include <QMessageBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -17,7 +18,7 @@
 #include <QKeyEvent>
 #include <QTreeView>
 #include <QHeaderView>
-
+#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <map>
@@ -37,16 +38,51 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-void MainWindow::prepareLayout(){
+void MainWindow::confirm(std::string action, cmd_info_T &info){
+  QMessageBox msg_box;
+  char buf[10];
+  sprintf(buf, "%d", info.source_files.size());
+  QString text = QString::fromStdString(action);
+  text.append(" selected ");
+  text.append(buf);
+  text.append(" file(s) \n");
+  text.append("From:\n");
+  text.append(QString::fromStdString(info.src_path));
+  text.append("\nTo:\n");
+  for(auto &a : info.paths){
+    text.append(QString::fromStdString(a));
+    text.append("\n");
+    }
+  text.append("?");
+  msg_box.setWindowTitle("Confirm copy");
+  msg_box.setText(text);
+  msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
+  msg_box.setDefaultButton(QMessageBox::Yes);
+  if(msg_box.exec() == QMessageBox::Yes){
+    OSInterface::copy(info);
+    }
+}
 
+void MainWindow::error(std::string &err){
+  QMessageBox msg_box;
+  msg_box.setWindowTitle("Error!");
+  msg_box.setText(QString::fromStdString(err));
+  msg_box.setStandardButtons(QMessageBox::Ok);
+  msg_box.setDefaultButton(QMessageBox::Ok);
+  msg_box.exec();
+}
+
+void MainWindow::prepareLayout(){
   QObject::connect(handler, &MainHandler::ch_list, this, &MainWindow::refreshMainLayout);
+  QObject::connect(handler, &MainHandler::confirm, this, &MainWindow::confirm);
+  QObject::connect(handler, &MainHandler::error, this, &MainWindow::error);
 
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F2, ButtonHandle<MainHandler>(Qt::Key_F2, "F2 Add List", &MainHandler::list_added)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F3, ButtonHandle<MainHandler>(Qt::Key_F3, "F3 Remove List", &MainHandler::list_removed)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F4, ButtonHandle<MainHandler>(Qt::Key_F4, "F4 View", &MainHandler::view)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F5, ButtonHandle<MainHandler>(Qt::Key_F5, "F5 Copy", &MainHandler::copy)));
-  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F6, ButtonHandle<MainHandler>(Qt::Key_F6, "F6 Rename", &MainHandler::rename)));
-  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F7, ButtonHandle<MainHandler>(Qt::Key_F7, "F7 Move", &MainHandler::move)));
+  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F6, ButtonHandle<MainHandler>(Qt::Key_F6, "F6 Move", &MainHandler::move)));
+  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F7, ButtonHandle<MainHandler>(Qt::Key_F7, "F7 Rename", &MainHandler::rename)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F8, ButtonHandle<MainHandler>(Qt::Key_F8, "F8 Remove", &MainHandler::remove)));
 
 
@@ -57,8 +93,9 @@ void MainWindow::prepareLayout(){
       QObject::connect(a.second.btt, &QPushButton::clicked, handler, a.second.fnc);
   }
 
-  handler->opened_lists.emplace_back(OSInterface::getCWD());
-  handler->opened_lists.emplace_back(OSInterface::getCWD());
+  for(int i = 0; i < handler->init_count; ++i){
+      handler->opened_lists.emplace_back(handler->init_dir);
+    }
 
   emit(handler->ch_list(false));
 
@@ -108,15 +145,8 @@ void MainWindow::refreshMainLayout(bool removing){
           QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
         }
       ++col;
-    //  if(count != handler->opened_lists.size())
-     //   a.content->focus
+
   }
- /* if(handler->opened_lists.size()){
-   auto &a = ((QVBoxLayout*)ui->centralGridLayout->itemAt(handler->opened_lists.size()-1))->geometry();
-    ui->centralGridLayout->update();
-    a.height();
-  repaint();
-    }*/
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *k){

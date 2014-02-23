@@ -40,6 +40,7 @@ struct ButtonHandle{
 };
 
 typedef struct{
+  std::string src_path;
   std::set<std::string> source_files, paths;
   std::map<std::string,std::set<std::string>> destination_files;
   enum {COPY, MOVE, VIEW };

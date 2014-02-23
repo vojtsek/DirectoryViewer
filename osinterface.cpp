@@ -1,7 +1,21 @@
 #include "osinterface.h"
 #include "functions.h"
+
 OSInterface::OSInterface()
 {
+}
+
+
+void OSInterface::copy(cmd_info_T &ci){
+  for(auto src : ci.source_files){
+      for(auto dstf : ci.destination_files[src]){
+          try{
+            doCopy(src, dstf);
+          }catch(OSException *e){
+
+          }
+        }
+    }
 }
 
 #ifdef __unix__
@@ -19,6 +33,10 @@ std::string OSInterface::getCWD(){
   return std::string(buf);
 }
 
+void OSInterface::doCopy(std::string &src, std::string &dst){
+  std::cout << "Copy " << src << " to: " << dst << std::endl;
+}
+
 std::string OSInterface::getPrefix(){ return "/"; }
 
 bool OSInterface::isDir(std::string path){
@@ -27,14 +45,6 @@ bool OSInterface::isDir(std::string path){
       return false;
    }
   return true;
-}
-
-void OSInterface::copy(cmd_info_T &ci){
-  for(auto &src : ci.source_files){
-      for(auto &dstf : ci.destination_files[src]){
-          std::cout << "Copy " << src << " to: " << dstf << std::endl;
-        }
-    }
 }
 
 void OSInterface::getDirInfo(std::string path, std::string pattern){
