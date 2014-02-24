@@ -13,7 +13,7 @@
 #include <fstream>
 
 MainHandler::MainHandler(QObject *parent) :
-  QObject(parent), col_count(2), max_lists(4), init_count(2)
+  QObject(parent), max_lists(4), col_count(2), init_count(2)
 {
   int param;
   init_dir = OSInterface::getCWD();

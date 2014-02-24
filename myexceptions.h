@@ -2,6 +2,7 @@
 #define MYEXCEPTIONS_H
 
 #include <exception>
+#include <QObject>
 #include <string>
 
 class MyException
@@ -14,6 +15,7 @@ public:
   }
   virtual const char *what();
   void process();
+  virtual ~MyException() {}
 };
 
 #endif // MYEXCEPTIONS_H

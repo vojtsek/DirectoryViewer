@@ -33,19 +33,7 @@
      <string>Options</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuLeft">
-    <property name="title">
-     <string>Left</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuRight">
-    <property name="title">
-     <string>Right</string>
-    </property>
-   </widget>
    <addaction name="menuOptions"/>
-   <addaction name="menuLeft"/>
-   <addaction name="menuRight"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

@@ -2,15 +2,15 @@
 #define MYTREEVIEW_H
 
 #include "types.h"
-#include <QTreeView>
+#include <QTreeWidget>
 #include <string>
 #include <set>
 
-class MyTreeView : public QTreeView, public MyViewType
+class MyTreeView : public QTreeWidget, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyTreeView(QWidget *p = 0): MyViewType(), QTreeView(p) {
+  explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType() {
     setSelectionBehavior(QAbstractItemView::SelectRows);
   }
   MyTreeView(const MyTreeView&);

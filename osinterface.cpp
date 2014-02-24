@@ -35,6 +35,20 @@ std::string OSInterface::getCWD(){
 }
 
 void OSInterface::doCopy(std::string &src, std::string &dst){
+  if(isDir(src)){
+      OSInterface os;
+      os.getDirInfo(src, "*");
+      for(auto &a : os.dirs){
+          std::string nsrc, ndst;
+          nsrc = src;
+          nsrc.push_back(dir_sep);
+          nsrc.append(a->name);
+          ndst = dst;
+          ndst.push_back(dir_sep);
+          ndst.append(a->name);
+          doCopy(nsrc, ndst);
+        }
+    }
   std::cout << "Copy " << src << " to: " << dst << std::endl;
 }
 

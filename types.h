@@ -15,8 +15,8 @@
 #include <QKeyEvent>
 #include <QGridLayout>
 #include <QLineEdit>
-#include <QListView>
 #include <QScrollBar>
+#include <QTreeWidgetItem>
 #include <QToolBar>
 #include <QObject>
 #include <map>
@@ -75,7 +75,7 @@ public:
 
 class MTree : public AbstractView{
 public:
-  void buildTree(std::string, QStandardItem *it);
+  void buildTree(std::string, QTreeWidgetItem *it);
   bool recursive;
   void init(std::string, std::string, bool);
   virtual AbstractView *clone();

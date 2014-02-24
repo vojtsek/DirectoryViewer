@@ -34,12 +34,14 @@ void OpenedListHandle::changeLayout(int type){
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
   delete ((MyTreeView *) view->content)->model();
   switch (type) {
-    case TREE:      
+    case TREE:
+      delete content;
       ((MTree *) view)->init(path, le2->text().toStdString(), true);
       content = view->content;
       h_layout2->addWidget((MyTreeView *)content);
       break;
      case LIST:
+      delete content;
       ((MTree *) view)->init(path, le2->text().toStdString(), false);
       content = view->content;
       h_layout2->addWidget((MyTreeView *)content);
@@ -113,19 +115,18 @@ void OpenedListHandle::itemClicked( QTreeWidgetItem *item, int col ) {
 void OpenedListHandle::itemPressed(const QModelIndex &mi){
   if(((MTree*)view)->recursive){
       std::string p;
-      //std::cout <<  ((QStandardItemModel *)(((MyTreeView *)content)->model()))->item(((MyTreeView*)content)->currentIndex().row())->text().toStdString() << std::endl;
-      QStandardItem *it = ((QStandardItemModel *)(((MyTreeView *)content)->model()))->item(mi.row(),mi.column());
-      QStandardItem *par = it->parent();
+      QTreeWidgetItem *it = ((MyTreeView *)content)->currentItem();
+      QTreeWidgetItem *par = it->parent();
       while(par){
-          p = OSInterface::dir_sep + par->text().toStdString();
+          p = par->text(0).toStdString() + OSInterface::dir_sep + p;
           par = par->parent();
         }
-      p = content->path + OSInterface::dir_sep + it->text().toStdString() + OSInterface::dir_sep + p;
-      for(int r = 0; r < it->rowCount(); ++r)
+      p = content->path + OSInterface::dir_sep + p + OSInterface::dir_sep + it->text(0).toStdString();
+      for(int r = 0; r < it->childCount(); ++r)
         {
-          QStandardItem *chi = it->child(r, 0);
-      //    std::cout << chi->text().toStdString() << std::endl;
-          ((MTree *)view)->buildTree( p + OSInterface::dir_sep + chi->text().toStdString(), chi);
+          QTreeWidgetItem *chi = it->child(r);
+          std::cout << chi->text(0).toStdString() << std::endl;
+          ((MTree *)view)->buildTree( p + OSInterface::dir_sep + chi->text(0).toStdString(), chi);
           //((MyTreeView *)content)->update();
         }
     }else{
@@ -178,7 +179,7 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   QObject::connect(le1, &MyLineEdit::focused, this, &OpenedListHandle::setSelection);
   if((view_type == TREE) || (view_type == LIST)){
     QObject::connect((MyTreeView *)content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-    QObject::connect( (MyTreeView *)content, SIGNAL( itemClicked( QTreeWidgetItem *, int ) ), this, SLOT( itemClicked( QTreeWidgetItem *, int )));
+    //QObject::connect( (MyTreeView *)content, SIGNAL( itemClicked( QTreeWidgetItem *, int ) ), this, SLOT( itemClicked( QTreeWidgetItem *, int )));
 
     h_layout2->addWidget((MyTreeView *)content);
     }

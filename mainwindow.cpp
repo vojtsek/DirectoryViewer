@@ -114,7 +114,7 @@ void MainWindow::prepareLayout(){
       QObject::connect(a.second.btt, &QPushButton::clicked, handler, a.second.fnc);
   }
 
-  for(int i = 0; i < handler->init_count; ++i){
+  for(unsigned int i = 0; i < handler->init_count; ++i){
       handler->opened_lists.emplace_back(handler->init_dir);
     }
 

@@ -13,7 +13,7 @@
 #include <string>
 
 int MyTreeView::getSelIdx(){
-  return selectedIndexes().empty() ? 0 : selectedIndexes()[0].row();
+  return currentIndex().row();
 }
 
 void MyTreeView::focusInEvent(QFocusEvent *e){
@@ -27,12 +27,11 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
   focus();
 }
 
-void MyTreeView::setFocus(){ QTreeView::setFocus(); }
+void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
 
 std::string MyTreeView::getSelected(){
   //co kdyz je empty
-  int idx = getSelIdx();
-  return path + OSInterface::dir_sep + ((QStandardItemModel*) model())->item(idx)->text().toStdString();
+  return path + OSInterface::dir_sep + currentItem()->text(0).toStdString() ;
 }
 
 void MyTreeView::changeSelection(){
@@ -41,10 +40,10 @@ void MyTreeView::changeSelection(){
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
-    ((QStandardItemModel*) model())->item(idx)->setForeground(brb);
+    topLevelItem(idx)->setForeground(0, brb);
   }else{
     multi_selection.insert(selected);
-    ((QStandardItemModel*) model())->item(idx)->setForeground(brr);
+    topLevelItem(idx)->setForeground(0, brr);
     }
 }
 
@@ -58,7 +57,7 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
       setFocus();
     }
   else
-    QTreeView::keyPressEvent(e);
+    QTreeWidget::keyPressEvent(e);
 }
 
 void MyTreeView::focus(){
