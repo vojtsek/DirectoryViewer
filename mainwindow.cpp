@@ -38,7 +38,7 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-void MainWindow::confirm(std::string action, cmd_info_T &info){
+void MainWindow::confirm1(std::string action, cmd_info_T &info){
   QMessageBox msg_box;
   char buf[10];
   sprintf(buf, "%d", info.source_files.size());
@@ -54,7 +54,27 @@ void MainWindow::confirm(std::string action, cmd_info_T &info){
     text.append("\n");
     }
   text.append("?");
-  msg_box.setWindowTitle("Confirm copy");
+  msg_box.setWindowTitle("Confirm");
+  msg_box.setText(text);
+  msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
+  msg_box.setDefaultButton(QMessageBox::Yes);
+  if(msg_box.exec() == QMessageBox::Yes){
+    OSInterface::copy(info);
+    }
+}
+
+void MainWindow::confirm2(std::string action, cmd_info_T &info){
+  QMessageBox msg_box;
+  char buf[10];
+  sprintf(buf, "%d", info.source_files.size());
+  QString text = QString::fromStdString(action);
+  text.append(" selected ");
+  text.append(buf);
+  text.append(" file(s)\n");
+  text.append("From:\n");
+  text.append(QString::fromStdString(info.src_path));
+  text.append("?");
+  msg_box.setWindowTitle("Confirm");
   msg_box.setText(text);
   msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
   msg_box.setDefaultButton(QMessageBox::Yes);
@@ -74,7 +94,8 @@ void MainWindow::error(std::string &err){
 
 void MainWindow::prepareLayout(){
   QObject::connect(handler, &MainHandler::ch_list, this, &MainWindow::refreshMainLayout);
-  QObject::connect(handler, &MainHandler::confirm, this, &MainWindow::confirm);
+  QObject::connect(handler, &MainHandler::confirm1, this, &MainWindow::confirm1);
+  QObject::connect(handler, &MainHandler::confirm2, this, &MainWindow::confirm2);
   QObject::connect(handler, &MainHandler::error, this, &MainWindow::error);
 
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F2, ButtonHandle<MainHandler>(Qt::Key_F2, "F2 Add List", &MainHandler::list_added)));
@@ -142,7 +163,8 @@ void MainWindow::refreshMainLayout(bool removing){
           else
             ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 1);
           a.content->setFocus();
-          QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
+          if((a.view_type == a.TREE) || (a.view_type == a.LIST))
+            QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
         }
       ++col;
 

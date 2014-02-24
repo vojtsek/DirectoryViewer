@@ -53,6 +53,7 @@ public:
   bool is_focused, marked;
   std::string path;
   virtual std::string getSelected() = 0;
+  virtual int getSelIdx() = 0;
   virtual void setFocus() = 0;
   virtual void unFocus() = 0;
   virtual void focus() = 0;
@@ -72,18 +73,9 @@ public:
   }
 };
 
-/*class MyTableView : public AbstractView{
-private:
-  std::string path;
-public:
-  explicit MyTableView(std::string, std::string);
-  virtual ~MyTableView() {}
-};*/
-
 class MTree : public AbstractView{
-private:
-  void buildTree(std::string, QStandardItem *it);
 public:
+  void buildTree(std::string, QStandardItem *it);
   bool recursive;
   void init(std::string, std::string, bool);
   virtual AbstractView *clone();

@@ -29,7 +29,6 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
 
 void MyTreeView::setFocus(){ QTreeView::setFocus(); }
 
-
 std::string MyTreeView::getSelected(){
   //co kdyz je empty
   int idx = getSelIdx();

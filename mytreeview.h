@@ -23,7 +23,7 @@ public:
   virtual void focus();
   void mark(bool);
   void changeSelection();
-  inline int getSelIdx();
+  virtual int getSelIdx();
 signals:
   void focused();
   void unfocused();

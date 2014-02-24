@@ -40,25 +40,28 @@ MainHandler::MainHandler(QObject *parent) :
   }catch(std::exception e) { std::cout << e.what() << std::endl; }
 }
 
-void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst){
+void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst, bool add_dst){
   is_dst = is_src = false;
   std::string file;
-  for(auto &a : opened_lists){
-      if((a.content->marked) && (!a.content->is_focused)){
-          is_dst = true;
-          cmd_info.paths.insert(a.content->path);
+  cmd_info.paths.clear();
+  if(add_dst){
+      for(auto &a : opened_lists){
+          if((a.content->marked) && (!a.content->is_focused)){
+              is_dst = true;
+              cmd_info.paths.insert(a.content->path);
+            }
         }
     }
   for(auto &a : opened_lists){
       if(a.content->is_focused){
           is_src = true;
           cmd_info.src_path = a.content->path;
-          file = ((MyTreeView*) a.content)->getSelected();
+          file = a.content->getSelected();
           cmd_info.source_files.insert(file);
           for(auto &b : cmd_info.paths){
               cmd_info.destination_files[file].insert(b + OSInterface::dir_sep + getBasename(file));
             }
-          for(auto src : ((MyTreeView*) a.content)->multi_selection){
+          for(auto src :  a.content->multi_selection){
               cmd_info.source_files.insert(src);
               for(auto &b : cmd_info.paths){
                   cmd_info.destination_files[src].insert(b + OSInterface::dir_sep + getBasename(src));
@@ -71,7 +74,7 @@ void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst){
 void MainHandler::copy(){
   cmd_info_T cmd_info;
   bool is_dst, is_src;
-  prepare_cmd(cmd_info, is_src, is_dst);
+  prepare_cmd(cmd_info, is_src, is_dst, true);
   for(auto &a : cmd_info.paths){
     if(a == cmd_info.src_path){
         std::string err("Destination is the same.");
@@ -80,7 +83,7 @@ void MainHandler::copy(){
       }
     }
   if(is_dst && is_src){
-      emit(confirm("Copy",cmd_info));
+      emit(confirm1("Copy",cmd_info));
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -90,12 +93,18 @@ void MainHandler::copy(){
 }
 
 void MainHandler::remove() {
+  cmd_info_T cmd_info;
+  bool is_dst, is_src;
+  prepare_cmd(cmd_info, is_src, is_dst, false);
+  if(is_src){
+      emit(confirm2("Remove",cmd_info));
+    }
 }
 
 void MainHandler::move() {
   cmd_info_T cmd_info;
   bool is_dst, is_src;
-  prepare_cmd(cmd_info, is_src, is_dst);
+  prepare_cmd(cmd_info, is_src, is_dst, true);
   for(auto &a : cmd_info.paths){
     if(a == cmd_info.src_path){
         std::string err("Destination is the same.");
@@ -104,7 +113,7 @@ void MainHandler::move() {
       }
     }
   if(is_dst && is_src){
-      emit(confirm("Move",cmd_info));
+      emit(confirm1("Move",cmd_info));
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -114,11 +123,21 @@ void MainHandler::move() {
 }
 
 void MainHandler::rename() {
-
+  cmd_info_T cmd_info;
+  bool is_dst, is_src;
+  prepare_cmd(cmd_info, is_src, is_dst, false);
+  if(is_src){
+      emit(confirm2("Rename???",cmd_info));
+    }
 }
 
 void MainHandler::view() {
-
+  cmd_info_T cmd_info;
+  bool is_dst, is_src;
+  prepare_cmd(cmd_info, is_src, is_dst, false);
+  if(is_src){
+      emit(confirm2("View???",cmd_info));
+    }
 }
 
 void MainHandler::list_added(){

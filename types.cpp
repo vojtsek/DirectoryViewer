@@ -34,28 +34,33 @@ void MTree::buildTree(std::string root, QStandardItem *it){
     e->process();
     return;
   }
-  if(root[root.size() - 1] == '/')
+  std::cout << root << std::endl;
+  if(root[root.size() - 1] == OSInterface::dir_sep)
     root = root.substr(0,root.size() - 1);
   QStandardItem *item;
   QList<QStandardItem*> ql;
+  int r = 0;
   for(auto &e : os.dirs){
-      if(e.second->name.empty()) continue;
-      if((e.second->name == ".") || (e.second->name == "..")) continue;
+      if(e->name.empty()) continue;
+      if(e->type == e->LINK) continue;
+      if((e->name == ".") || (e->name == "..")) continue;
       std::stringstream ss;
-      item = new QStandardItem(QString::fromStdString(e.second->name));
+      item = new QStandardItem(QString::fromStdString(e->name));
       item->setEditable(false);
-      if((e.second->type == e.second->DIR) && (e.second->name != ".") && (e.second->name != "..")){
-          buildTree(root + "/" + e.second->name, item);
-        }
+      it->setChild(r++, item);
+
+      /*if((e->type == e->DIR) && (e->name != ".") && (e->name != "..")){
+          buildTree(root + "/" + e->name, item);
+        }*/
       ql.push_back(item);
-      item = new QStandardItem(QString::fromStdString(e.second->type_name));
+      item = new QStandardItem(QString::fromStdString(e->type_name));
       item->setEditable(false);
       ql.push_back(item);
-      ss << e.second->byte_size;
+      ss << e->byte_size;
       item = new QStandardItem(QString::fromStdString(ss.str()));
       item->setEditable(false);
       ql.push_back(item);
-      it->appendRow(ql);
+      //it->appendRow(ql);
       ql.clear();
     }
 }
@@ -85,37 +90,48 @@ void MTree::init(std::string p, std::string pat, bool rec){
   QStandardItemModel *model = new QStandardItemModel(0, 3);
   QStandardItem *item;
   QList<QStandardItem*> qlis;
+  QFont dir_font, base_font, link_font;
+  link_font.setFamily("Verdana");
+  link_font.setItalic(true);
+  dir_font.setBold(true);
+  dir_font.setFamily("Verdana");
+  base_font.setFamily("Verdana");
   int row = 0;
   if(p[p.size() - 1] == '/')
     p = p.substr(0,p.size() - 1);
   for(auto &e : osi->dirs){
-      if((e.second->name == ".") || (e.second->name == "..")) continue;
+      if((e->name == ".") || (e->name == "..")) continue;
       qlis.clear();
       std::stringstream ss;
       std::string type;
-      item = new QStandardItem(QString::fromStdString(e.second->name));
+      item = new QStandardItem(QString::fromStdString(e->name));
       item->setEditable(false);
+      if(e->type == e->DIR) item->setFont(dir_font);
+      else if(e->type == e->LINK){
+          item->setFont(link_font);
+          item->setForeground(QBrush(QColor(255, 0, 0)));
+      }else item->setFont(base_font);
       if(rec){
-          if(e.second->type == e.second->DIR){
-              buildTree(p + "/" + e.second->name, item);
+          if(e->type == e->DIR){
+              buildTree(p + OSInterface::dir_sep + e->name, item);
             }
         }
       model->setItem(row, 0, item);
-      item = new QStandardItem(QString::fromStdString(e.second->type_name));
+      item = new QStandardItem(QString::fromStdString(e->type_name));
       item->setEditable(false);
+      item->setFont(base_font);
       model->setItem(row, 1, item);
-      ss << e.second->byte_size;
+      ss << e->byte_size;
       item = new QStandardItem(QString::fromStdString(ss.str()));
+      item->setFont(base_font);
       item->setEditable(false);
       model->setItem(row, 2, item);
       ++row;
     }
-  QHeaderView *hv = new QHeaderView(Qt::Horizontal);
   ((MyTreeView*)content)->setModel(model);
   ((MyTreeView*)content)->setSelectionBehavior(QTreeView::SelectRows);
-  ((MyTreeView*)content)->setHeader(hv);
-  ((MyTreeView*)content)->sortByColumn(1,Qt::AscendingOrder);
-  ((MyTreeView*)content)->setColumnWidth(0, 300);
+  ((MyTreeView*)content)->setHeaderHidden(true);
+  ((MyTreeView*)content)->setColumnWidth(0, 250);
 }
 
 MTree::MTree(std::string p, std::string pat, bool rec): AbstractView(p, pat), recursive(rec){

@@ -11,7 +11,7 @@ class OpenedListHandle;
 class MainHandler : public QObject
 {
   Q_OBJECT
-  void prepare_cmd(cmd_info_T &, bool &, bool &);
+  void prepare_cmd(cmd_info_T &, bool &, bool &, bool);
 public:
   unsigned int max_lists, col_count, init_count;
   std::string init_dir;
@@ -21,7 +21,8 @@ public:
   explicit MainHandler(QObject *parent = 0);
 signals:
   void ch_list(bool);
-  void confirm(std::string, cmd_info_T &);
+  void confirm1(std::string, cmd_info_T &);
+  void confirm2(std::string, cmd_info_T &);
   void error(std::string &);
 
 public slots:

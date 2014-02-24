@@ -1,5 +1,6 @@
 #include "osinterface.h"
 #include "functions.h"
+#include <algorithm>
 
 OSInterface::OSInterface()
 {
@@ -47,13 +48,12 @@ bool OSInterface::isDir(std::string path){
   return true;
 }
 
+/*bool operator < (const dirEntryT *d1, const dirEntryT *d2){
+}
+*/
+
 void OSInterface::getDirInfo(std::string path, std::string pattern){
   DIR *dir;
-  if(path == "/mnt") return;
-  if(path == "/proc") return;
-  if(path == "/run") return;
-  if(path == "/root") return;
-  if(path == "/sys") return;
   if((dir = opendir(path.c_str())) == NULL){
       throw new OSException(path, "failed to open dir.");
       return;
@@ -61,33 +61,40 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
   struct dirent *entry = new struct dirent();
   struct stat *finfo = new struct stat();
   std::string abs_path(path), name;
-  std::map<std::string,struct dirent*> entries;
   dirEntryT *de;
   while((entry = readdir(dir))){
       name = entry->d_name;
+      if((name == ".") || name == "..") continue;
       if(!matchExpression(name, pattern)) continue;
       de = new dirEntryT();
-      stat((abs_path + "/" + name).c_str(), finfo);
+      lstat((abs_path + dir_sep + name).c_str(), finfo);
       if(finfo == NULL)
         throw new OSException(name, std::string("failed to read file info."));
       de->name = name;
-      if(S_ISLNK(finfo->st_mode)){
-          continue;
-      }else if(S_ISREG(finfo->st_mode)){
-        de->type = de->FILE;
-        de->type_name = "FILE";
-      }else if(S_ISDIR(finfo->st_mode)){
-        de->type = de->DIR;
-        de->type_name = "DIR";
-      }else{
-          continue;
-        de->type = de->UNKNOWN;
-        de->type_name = "UNKNOWN";
+      if(S_ISREG(finfo->st_mode)){
+          de->type = de->FILE;
+          de->type_name = "FILE";
+        }else if(S_ISDIR(finfo->st_mode)){
+          de->type = de->DIR;
+          de->type_name = "DIR";
+        }else if(S_ISLNK(finfo->st_mode)){
+          de->type = de->LINK;
+          de->type_name = "LINK";
+        }else{
+          de->type = de->UNKNOWN;
+          de->type_name = "UNKNOWN";
         }
       de->byte_size = finfo->st_size;
-      dirs.insert(std::pair<std::string, dirEntryT*>(de->name, de));
+      dirs.push_back(de);
     }
   closedir(dir);
+  std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
+      if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
+        return true;
+      else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
+        return false;
+      else
+        return d1->name < d2->name; });
 }
 
 #endif // __unix__

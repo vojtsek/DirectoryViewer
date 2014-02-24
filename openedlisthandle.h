@@ -15,6 +15,7 @@
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QModelIndex>
+#include <QTreeWidgetItem>
 #include <QListView>
 #include <QScrollBar>
 #include <QToolBar>
@@ -59,6 +60,7 @@ public slots:
   void pathChanged();
   void setSelection(bool);
   void itemPressed(const QModelIndex &);
+  void itemClicked(QTreeWidgetItem *item, int col );
 };
 
 

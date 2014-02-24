@@ -10,14 +10,14 @@
 typedef struct {
   std::string name, type_name;
   int type;
-  enum {FILE, DIR, UNKNOWN};
+  enum {FILE, DIR, UNKNOWN, LINK};
   long byte_size;
 } dirEntryT;
 
 class OSInterface
 {
 public:
-  std::map<std::string, dirEntryT*> dirs;
+  std::vector<dirEntryT*> dirs;
 #ifdef __unix__
   static const char dir_sep = '/';
 #endif
