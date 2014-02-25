@@ -62,10 +62,6 @@ bool OSInterface::isDir(std::string path){
   return true;
 }
 
-/*bool operator < (const dirEntryT *d1, const dirEntryT *d2){
-}
-*/
-
 void OSInterface::getDirInfo(std::string path, std::string pattern){
   DIR *dir;
   if((dir = opendir(path.c_str())) == NULL){
@@ -77,10 +73,11 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
   std::string abs_path(path), name;
   dirEntryT *de;
   while((entry = readdir(dir))){
+      de = new dirEntryT();
       name = entry->d_name;
+      de->ext_name = getExtension(name);
       if((name == ".") || name == "..") continue;
       if(!matchExpression(name, pattern)) continue;
-      de = new dirEntryT();
       lstat((abs_path + dir_sep + name).c_str(), finfo);
       if(finfo == NULL)
         throw new OSException(name, std::string("failed to read file info."));
@@ -97,6 +94,10 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
         }else{
           de->type = de->UNKNOWN;
           de->type_name = "UNKNOWN";
+        }
+      if(isArch(de->ext_name)){
+          de->type_name = "ARCHIVE";
+          de->type = de->ARCHIVE;
         }
       de->byte_size = finfo->st_size;
       dirs.push_back(de);

@@ -57,6 +57,7 @@ public:
   virtual void setFocus() = 0;
   virtual void unFocus() = 0;
   virtual void focus() = 0;
+  virtual void mark(bool) = 0;
   MyViewType(): is_focused(false), marked(false), path("") {}
   virtual ~MyViewType() {}
 };
@@ -83,5 +84,13 @@ public:
   virtual ~MTree() {}
 };
 
+class MIcon : public AbstractView{
+public:
+  int cols;
+  void init(std::string, std::string);
+  virtual AbstractView *clone();
+  MIcon(std::string, std::string);
+  virtual ~MIcon() {}
+};
 
 #endif //TYPES_H

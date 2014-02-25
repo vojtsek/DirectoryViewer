@@ -1,53 +1,42 @@
-#include "mytreeview.h"
-#include "osinterface.h"
+#include "myiconview.h"
 #include "types.h"
+#include "osinterface.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
-#include <QTreeView>
-#include <QStandardItemModel>
-#include <QPersistentModelIndex>
-#include <QAbstractItemView>
 #include <QBrush>
-#include <QStandardItem>
 #include <iostream>
 #include <string>
 
-int MyTreeView::getSelIdx(){
-  return currentIndex().row();
+int MyIconView::getSelIdx(){
+  return 1;
 }
 
-void MyTreeView::focusInEvent(QFocusEvent *e){
+void MyIconView::focusInEvent(QFocusEvent *e){
   emit(focused());
-  if(model()){
-      if(selectedIndexes().empty()){
-          QPersistentModelIndex sel_idx = indexAt(QPoint(0, 0));
-          setCurrentIndex(sel_idx);
-        }
-    }
   focus();
 }
 
-void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
+void MyIconView::setFocus(){ QWidget::setFocus(); }
 
-std::string MyTreeView::getSelected(){
+std::string MyIconView::getSelected(){
   //co kdyz je empty
-  return path + OSInterface::dir_sep + currentItem()->text(0).toStdString() ;
+  return path + OSInterface::dir_sep;
 }
 
-void MyTreeView::changeSelection(){
+void MyIconView::changeSelection(){
   int idx = getSelIdx();
   QBrush brr(QColor(0, 159, 255)), brb(Qt::black);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
-    topLevelItem(idx)->setForeground(0, brb);
+    //topLevelItem(idx)->setForeground(0, brb);
   }else{
     multi_selection.insert(selected);
-    topLevelItem(idx)->setForeground(0, brr);
+    //topLevelItem(idx)->setForeground(0, brr);
     }
 }
 
-void MyTreeView::keyPressEvent(QKeyEvent *e){
+void MyIconView::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_M)
     mark(!marked);
   else if(e->key() == Qt::Key_S)
@@ -56,17 +45,19 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
       emit(stepup());
       setFocus();
     }else if(e->key() == Qt::Key_F1)
-      emit(chlayout());
-    else
-    QTreeWidget::keyPressEvent(e);
+    emit(chlayout());
+  else if(e->key() == Qt::Key_Tab){
+      QWidget::keyPressEvent(e);
+  }else
+    QTableWidget::keyPressEvent(e);
 }
 
-void MyTreeView::focus(){
+void MyIconView::focus(){
   is_focused = true;
   setStyleSheet(focused_list_style);
 }
 
-void MyTreeView::mark(bool m){
+void MyIconView::mark(bool m){
   if(m){ //oznacit
       marked = true;
       setStyleSheet(marked_list_style);
@@ -76,9 +67,10 @@ void MyTreeView::mark(bool m){
     }
 }
 
-void MyTreeView::unFocus(){
+void MyIconView::unFocus(){
   is_focused = false;
   if(!marked)
     setStyleSheet(unfocused_list_style);
   else mark(true);
 }
+

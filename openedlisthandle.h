@@ -48,19 +48,29 @@ public:
   OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
   void delGraphics();
   void changeLayout(int);
-  void initLayout(std::string, MTree *tree = 0);
+  template <typename T>
+  void connectSignals(){
+    QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
+    QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
+    QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
+    QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
+  }
+
+  void initLayout(std::string, AbstractView *tree = 0);
   virtual ~OpenedListHandle();
 
 public slots:
   void toTree();
   void toList();
   void toIcon();
+  void chlayout();
   void stepUp();
   void patternChanged();
   void pathChanged();
   void setSelection(bool);
-  void itemPressed(const QModelIndex &);
-  void itemClicked(QTreeWidgetItem *item, int col );
+  //void itemPressed(QTreeWidgetItem *item);
+  void itemExpanded(QTreeWidgetItem *item);
+  void itemActivated(QTreeWidgetItem *item, int col );
 };
 
 

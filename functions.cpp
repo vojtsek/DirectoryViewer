@@ -31,10 +31,14 @@ std::string getPath(std::string &path){
   return path.substr(0, pos);
 }
 
-std::string getFormat(std::string &path){
+std::string getExtension(std::string &path){
   if(path.empty()) return "";
   std::string fn = getBasename(path);
   int pos;
   if((pos = path.find_last_of('.')) == -1) return "";
   return path.substr(pos + 1, path.size());
+}
+
+bool isArch(std::string &ext){
+  return ((ext == "gz") || (ext == "bz2") || (ext == "zip") || (ext == "rar"));
 }

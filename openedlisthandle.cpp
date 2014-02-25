@@ -1,25 +1,19 @@
-
 #include "openedlisthandle.h"
 #include "mainhandler.h"
 #include "mylineedit.h"
+#include "myiconview.h"
 #include "osinterface.h"
 #include "stylesheets.h"
 #include "types.h"
 
-#include <dirent.h>
 #include <QWidget>
 #include <QString>
 #include <QPushButton>
 #include <QComboBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QGridLayout>
 #include <QLineEdit>
-#include <QTreeView>
-#include <QListView>
-#include <QScrollBar>
 #include <QKeyEvent>
-#include <QStandardItemModel>
 #include <QToolBar>
 #include <QModelIndex>
 #include <QObject>
@@ -30,9 +24,10 @@
 void OpenedListHandle::changeLayout(int type){
   view_type = type;
   bool was_focused = content->is_focused;
+  bool was_marked = content->marked;
   if((view_type == TREE) || (view_type == LIST))
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
-  delete ((MyTreeView *) view->content)->model();
+  //delete ((MyTreeView *) view->content)->model();
   switch (type) {
     case TREE:
       delete content;
@@ -46,17 +41,24 @@ void OpenedListHandle::changeLayout(int type){
       content = view->content;
       h_layout2->addWidget((MyTreeView *)content);
       break;
+    case ICON:
+      delete content;
+      ((MIcon *) view)->init(path, le2->text().toStdString());
+      content = view->content;
+      h_layout2->addWidget((MyIconView *)content);
     default:
       break;
     }
+  if(was_marked)
+    content->mark(true);
   if(was_focused){
     content->setFocus();
     content->focus();
     }
-  if((view_type == TREE) || (view_type == LIST)){
-      QObject::connect((MyTreeView *)content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-      QObject::connect((MyTreeView *)content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
-    }
+  if((view_type == TREE) || (view_type == LIST))
+    connectSignals<MyTreeView>();
+  else if (view_type == ICON)
+    connectSignals<MyIconView>();
 }
 
 void OpenedListHandle::toTree(){
@@ -69,6 +71,15 @@ void OpenedListHandle::toIcon(){
 
 void OpenedListHandle::toList(){
   changeLayout(LIST);
+}
+
+void OpenedListHandle::chlayout(){
+  if(view_type == LIST)
+    changeLayout(TREE);
+  else if(view_type == TREE)
+    changeLayout(ICON);
+  else
+    changeLayout(LIST);
 }
 
 void OpenedListHandle::patternChanged(){
@@ -108,27 +119,14 @@ void OpenedListHandle::setSelection(bool in){
 }
 
 
-void OpenedListHandle::itemClicked( QTreeWidgetItem *item, int col ) {
+/*void OpenedListHandle::itemClicked( QTreeWidgetItem *item, int col ) {
   std::cout << "Item Text: " << item->text( col ).toStdString();
-}
+}*/
 
-void OpenedListHandle::itemPressed(const QModelIndex &mi){
-  if(((MTree*)view)->recursive){
-      std::string p;
-      QTreeWidgetItem *it = ((MyTreeView *)content)->currentItem();
-      QTreeWidgetItem *par = it->parent();
-      while(par){
-          p = par->text(0).toStdString() + OSInterface::dir_sep + p;
-          par = par->parent();
-        }
-      p = content->path + OSInterface::dir_sep + p + OSInterface::dir_sep + it->text(0).toStdString();
-      for(int r = 0; r < it->childCount(); ++r)
-        {
-          QTreeWidgetItem *chi = it->child(r);
-          std::cout << chi->text(0).toStdString() << std::endl;
-          ((MTree *)view)->buildTree( p + OSInterface::dir_sep + chi->text(0).toStdString(), chi);
-          //((MyTreeView *)content)->update();
-        }
+void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int col){
+  if(view_type == TREE){
+      item->setExpanded(!item->isExpanded());
+      //itemExpanded(item);
     }else{
       std::string new_path = content->getSelected();
       if(OSInterface::isDir(new_path)){
@@ -139,7 +137,24 @@ void OpenedListHandle::itemPressed(const QModelIndex &mi){
     }
 }
 
-void OpenedListHandle::initLayout(std::string p, MTree *tree){
+void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
+  std::string p, path;
+  QTreeWidgetItem *par = it->parent();
+  while(par){
+      p = par->text(0).toStdString() + OSInterface::dir_sep + p;
+      par = par->parent();
+    }
+  p = content->path + OSInterface::dir_sep + p + OSInterface::dir_sep + it->text(0).toStdString();
+  for(int r = 0; r < it->childCount(); ++r)
+    {
+      QTreeWidgetItem *chi = it->child(r);
+      path = p + OSInterface::dir_sep + chi->text(0).toStdString();
+      if(OSInterface::isDir(path))
+        ((MTree *)view)->buildTree(path, chi);
+    }
+}
+
+void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   v_layout = new QVBoxLayout();
   h_layout1 = new QHBoxLayout();
   h_layout2 = new QHBoxLayout();
@@ -167,8 +182,6 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   else
     view = tree;
   content = view->content;
-  if((view_type == TREE) || (view_type == LIST))
-    QObject::connect((MyTreeView *)content, &MyTreeView::stepup, this, &OpenedListHandle::stepUp);
   tb = new QToolBar();
   h_layout1->addWidget(le1);
   h_layout1->addWidget(le2);
@@ -178,17 +191,18 @@ void OpenedListHandle::initLayout(std::string p, MTree *tree){
   QObject::connect(le1, &QLineEdit::textChanged, this, &OpenedListHandle::pathChanged);
   QObject::connect(le1, &MyLineEdit::focused, this, &OpenedListHandle::setSelection);
   if((view_type == TREE) || (view_type == LIST)){
-    QObject::connect((MyTreeView *)content, SIGNAL(activated(const QModelIndex &)), this, SLOT(itemPressed(const QModelIndex &)));
-    //QObject::connect( (MyTreeView *)content, SIGNAL( itemClicked( QTreeWidgetItem *, int ) ), this, SLOT( itemClicked( QTreeWidgetItem *, int )));
-
+    connectSignals<MyTreeView>();
     h_layout2->addWidget((MyTreeView *)content);
+    }else if(view_type == ICON){
+      connectSignals<MyIconView>();
+      h_layout2->addWidget((MyTreeView *)content);
     }
   for(auto &a : tool_btts){
       a.second.btt->setMaximumWidth(150);
       a.second.btt->setFocusPolicy(Qt::NoFocus);
       a.second.btt->setStyleSheet(btt_style);
-        tb->addWidget(a.second.btt);
-        QObject::connect(a.second.btt, &QPushButton::clicked, this, a.second.fnc);
+      tb->addWidget(a.second.btt);
+      QObject::connect(a.second.btt, &QPushButton::clicked, this, a.second.fnc);
     }
   h_layout3->addWidget(tb);
   v_layout->addLayout(h_layout1);
@@ -224,13 +238,15 @@ OpenedListHandle::OpenedListHandle(const OpenedListHandle &o, QWidget *parent): 
   in_layout = false;
   view_type = o.view_type;
   path = o.path;
-  MTree *new_view = (MTree *) o.view->clone();
+  AbstractView *new_view;
+  if((view_type == LIST) || (view_type == TREE))
+    new_view = (MTree *) o.view->clone();
+  else if(view_type == ICON)
+    new_view = (MIcon *) o.view->clone();
   initLayout(path, new_view);
   content->is_focused = o.content->is_focused;
   content->marked = o.content->marked;
+  content->multi_selection = o.content->multi_selection;
   if(content->is_focused)
     content->setFocus();
 }
-
-
-

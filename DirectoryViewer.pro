@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     openedlisthandle.cpp \
     functions.cpp \
     mylineedit.cpp \
-    mytreeview.cpp
+    mytreeview.cpp \
+    myiconview.cpp
 
 HEADERS  += mainwindow.h \
     mainhandler.h \
@@ -32,7 +33,8 @@ HEADERS  += mainwindow.h \
     functions.h \
     mylineedit.h \
     mytreeview.h \
-    stylesheets.h
+    stylesheets.h \
+    myiconview.h
 
 FORMS    += mainwindow.ui
 

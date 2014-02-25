@@ -8,9 +8,9 @@
 #include <string>
 
 typedef struct {
-  std::string name, type_name;
+  std::string name, type_name, ext_name;
   int type;
-  enum {FILE, DIR, UNKNOWN, LINK};
+  enum {FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
   long byte_size;
 } dirEntryT;
 

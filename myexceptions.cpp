@@ -15,6 +15,6 @@ void MyException::process(){
   msg_box.setText(QString::fromStdString(err));
   msg_box.setStandardButtons(QMessageBox::Ok);
   msg_box.setDefaultButton(QMessageBox::Ok);
- // msg_box.exec();
+  msg_box.exec();
 }
 

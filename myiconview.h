@@ -1,20 +1,16 @@
-#ifndef MYTREEVIEW_H
-#define MYTREEVIEW_H
+#ifndef MYICONVIEW_H
+#define MYICONVIEW_H
 
 #include "types.h"
-#include <QTreeWidget>
-#include <string>
-#include <set>
+#include "QTableWidget"
 
-class MyTreeView : public QTreeWidget, public MyViewType
+class MyIconView : public QTableWidget, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType() {
-    setSelectionBehavior(QAbstractItemView::SelectRows);
-  }
-//  MyTreeView(const MyTreeView&);
-  virtual ~MyTreeView() {}
+  explicit MyIconView(QWidget *p = 0): QTableWidget(p), MyViewType() {}
+ // MyTreeView(const MyTreeView&);
+  virtual ~MyIconView() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   std::string getSelected();
@@ -31,4 +27,4 @@ signals:
   void chlayout();
 };
 
-#endif // MYTREEVIEW_H
+#endif // MYICONVIEW_H
