@@ -16,12 +16,14 @@ public:
 //  MyTreeView(const MyTreeView&);
   virtual ~MyTreeView() {}
   virtual void focusInEvent(QFocusEvent *);
+  virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   std::string getSelected();
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
+  virtual QWidget *getContent();
   void changeSelection();
   virtual int getSelIdx();
 signals:

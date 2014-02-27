@@ -4,6 +4,8 @@
 #include "mainhandler.h"
 #include "osinterface.h"
 #include "mylineedit.h"
+#include "mytreeview.h"
+#include "myiconview.h"
 
 #include <dirent.h>
 #include <QWidget>
@@ -16,6 +18,7 @@
 #include <QLineEdit>
 #include <QModelIndex>
 #include <QTreeWidgetItem>
+#include <QTableWidgetItem>
 #include <QListView>
 #include <QScrollBar>
 #include <QToolBar>
@@ -24,6 +27,9 @@
 #include <map>
 #include <string>
 #include <iostream>
+
+class MyTreeView;
+class MyIconView;
 
 class OpenedListHandle: public QWidget{
   Q_OBJECT
@@ -37,7 +43,6 @@ public:
   MyViewType *content;
   AbstractView *view;
   QToolBar *tb;
-  QScrollBar *sb;
   bool in_layout;
   std::string path;
   enum {TREE, LIST, ICON };
@@ -48,10 +53,14 @@ public:
   OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
   void delGraphics();
   void changeLayout(int);
+  void highlightBtt();
   template <typename T>
   void connectSignals(){
-    QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
-    QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
+    if(typeid(T) == typeid(MyTreeView)){
+        QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
+        QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
+      }else if(typeid(T) == typeid(MyIconView))
+      QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
     QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
     QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
   }
@@ -59,6 +68,8 @@ public:
   void initLayout(std::string, AbstractView *tree = 0);
   virtual ~OpenedListHandle();
 
+signals:
+  void updated();
 public slots:
   void toTree();
   void toList();
@@ -71,6 +82,7 @@ public slots:
   //void itemPressed(QTreeWidgetItem *item);
   void itemExpanded(QTreeWidgetItem *item);
   void itemActivated(QTreeWidgetItem *item, int col );
+  void itemActivated(QTableWidgetItem *item);
 };
 
 

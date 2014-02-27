@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "mainhandler.h"
+#include "myiconview.h"
 #include "ui_mainwindow.h"
 #include "osinterface.h"
 #include "openedlisthandle.h"
@@ -7,6 +8,7 @@
 
 #include <QPushButton>
 #include <QComboBox>
+#include <typeinfo>
 #include <QMessageBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -137,6 +139,25 @@ void MainWindow::updateFocus(){
     }
 }
 
+
+void MainWindow::handleTab(){
+  QWidget *first, *second;
+  QWidgetItem *myItem;
+  first = second = nullptr;
+  for(auto &a : handler->opened_lists){
+      if(first == nullptr){
+          myItem = dynamic_cast <QWidgetItem*>(a.h_layout2->itemAt(0));
+          first = myItem->widget();
+          continue;
+        }
+      myItem = dynamic_cast <QWidgetItem*>(a.h_layout2->itemAt(0));
+      second = myItem->widget();
+      QWidget::setTabOrder(first, second);
+      first = second;
+    }
+  //for (int i = 0; i < layout->count(); ++i) {
+}
+
 void MainWindow::refreshMainLayout(bool removing){
   int row, col;
   unsigned int count;
@@ -163,8 +184,11 @@ void MainWindow::refreshMainLayout(bool removing){
           else
             ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 1);
           a.content->setFocus();
+          QObject::connect(&a, &OpenedListHandle::updated, this, &MainWindow::handleTab);
           if((a.view_type == a.TREE) || (a.view_type == a.LIST))
             QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
+          else if(a.view_type == a.ICON)
+            QObject::connect((MyIconView *)a.content, &MyIconView::tab, this, &MainWindow::handleTab);
         }
       ++col;
 

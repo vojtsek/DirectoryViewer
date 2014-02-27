@@ -26,6 +26,7 @@ private:
  public slots:
   void refreshMainLayout(bool all);
   void updateFocus();
+  void handleTab();
   void confirm1(std::string, cmd_info_T &);
   void confirm2(std::string, cmd_info_T &);
   void error(std::string &);

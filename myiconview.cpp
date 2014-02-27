@@ -16,23 +16,27 @@ void MyIconView::focusInEvent(QFocusEvent *e){
   focus();
 }
 
+void MyIconView::focusOutEvent(QFocusEvent *e){
+  unFocus();
+}
+
 void MyIconView::setFocus(){ QWidget::setFocus(); }
 
 std::string MyIconView::getSelected(){
   //co kdyz je empty
-  return path + OSInterface::dir_sep;
+  //std::cout << this->currentItem()->text().toStdString() << std::endl;
+  return path + OSInterface::dir_sep + this->currentItem()->text().toStdString();
 }
 
 void MyIconView::changeSelection(){
-  int idx = getSelIdx();
-  QBrush brr(QColor(0, 159, 255)), brb(Qt::black);
+  QBrush brb(QColor(0, 200, 255)), brw(Qt::white);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
-    //topLevelItem(idx)->setForeground(0, brb);
+    currentItem()->setBackground(brw);
   }else{
     multi_selection.insert(selected);
-    //topLevelItem(idx)->setForeground(0, brr);
+    currentItem()->setBackground(brb);
     }
 }
 
@@ -74,3 +78,6 @@ void MyIconView::unFocus(){
   else mark(true);
 }
 
+QWidget * MyIconView::getContent(){
+  return (QWidget *) this;
+}

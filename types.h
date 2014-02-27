@@ -58,6 +58,7 @@ public:
   virtual void unFocus() = 0;
   virtual void focus() = 0;
   virtual void mark(bool) = 0;
+  virtual QWidget *getContent() = 0;
   MyViewType(): is_focused(false), marked(false), path("") {}
   virtual ~MyViewType() {}
 };
@@ -66,9 +67,13 @@ class AbstractView{
 public:
   MyViewType *content;
   std::string path, pattern;
-  OSInterface * osi;
+  OSInterface *osi;
+  int col_width;
+  bool recursive;
   AbstractView(std::string, std::string);
   virtual AbstractView *clone() = 0;
+  virtual void rebuild(std::string, std::string) = 0;
+  //virtual void init(std::string, std::string, bool);
   virtual ~AbstractView(){
     delete content;
   }
@@ -76,19 +81,19 @@ public:
 
 class MTree : public AbstractView{
 public:
-  void buildTree(std::string, QTreeWidgetItem *it);
-  bool recursive;
+  void buildTree(std::string, QTreeWidgetItem *it, bool);
   void init(std::string, std::string, bool);
   virtual AbstractView *clone();
+  virtual void rebuild(std::string, std::string);
   MTree(std::string, std::string, bool);
   virtual ~MTree() {}
 };
 
 class MIcon : public AbstractView{
 public:
-  int cols;
   void init(std::string, std::string);
   virtual AbstractView *clone();
+  virtual void rebuild(std::string, std::string);
   MIcon(std::string, std::string);
   virtual ~MIcon() {}
 };

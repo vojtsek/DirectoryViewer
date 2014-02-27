@@ -8,12 +8,17 @@ class MyIconView : public QTableWidget, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyIconView(QWidget *p = 0): QTableWidget(p), MyViewType() {}
+  explicit MyIconView(QWidget *p = 0): QTableWidget(p), MyViewType() {
+    setSelectionBehavior( QAbstractItemView::SelectItems );
+    setSelectionMode( QAbstractItemView::SingleSelection );
+  }
  // MyTreeView(const MyTreeView&);
   virtual ~MyIconView() {}
   virtual void focusInEvent(QFocusEvent *);
+  virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   std::string getSelected();
+  virtual QWidget *getContent();
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
@@ -24,6 +29,7 @@ signals:
   void focused();
   void unfocused();
   void stepup();
+  void tab();
   void chlayout();
 };
 

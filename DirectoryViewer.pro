@@ -12,6 +12,7 @@ TARGET = DirectoryViewer
 TEMPLATE = app
 
 
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     mainhandler.cpp \

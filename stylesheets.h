@@ -7,6 +7,13 @@ const QString list_style = "selection-background-color:#09b;"
     "selection-color:#000;"
     "color:#999;";
 
+const QString marked_btt_style = "QAbstractButton {"
+    "border-radius: 6px;"
+    "border: 1px solid #09b;"
+    "padding:2;"
+    "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #09b, stop: 1 #dadbde);"
+    "}";
+
 const QString lineedit_style = "QLineEdit {"
     + list_style +
     "border: 1px solid #09b;"
@@ -21,17 +28,19 @@ const QString btt_style = "QAbstractButton {"
     "QPushButton:pressed {"
     "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 #f6f7fa); }";
 
-const QString focused_list_style = "QTreeView {"
+const QString focused_list_style = "QTableView, QTreeView {"
     + list_style +
     "color:#000;"
-    "border: 1px solid #000; }";
+    "border: 1px solid #000; }"
+    "QStandardItem {margin:5;}";
 
-const QString unfocused_list_style = "QTreeView {"
+const QString unfocused_list_style = "QTableView, QTreeView {"
     + list_style +
     "selection-background-color:#fff;"
-    "border: none;}";
+    "border: none;}"
+    "QStandardItem {margin:5;}";
 
-const QString marked_list_style = "QTreeView {"
+const QString marked_list_style = "QTableView, QTreeView {"
     + list_style +
     "background:#efe;"
     "color:#000;border: 1px solid #09b;}";

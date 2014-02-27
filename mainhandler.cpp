@@ -54,14 +54,9 @@ void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst, 
     }
   for(auto &a : opened_lists){
       if(a.content->is_focused){
-          is_src = true;
           cmd_info.src_path = a.content->path;
-          file = a.content->getSelected();
-          cmd_info.source_files.insert(file);
-          for(auto &b : cmd_info.paths){
-              cmd_info.destination_files[file].insert(b + OSInterface::dir_sep + getBasename(file));
-            }
           for(auto src :  a.content->multi_selection){
+              is_src = true;
               cmd_info.source_files.insert(src);
               for(auto &b : cmd_info.paths){
                   cmd_info.destination_files[src].insert(b + OSInterface::dir_sep + getBasename(src));
