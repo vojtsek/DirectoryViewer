@@ -61,7 +61,10 @@ void MainWindow::confirm1(std::string action, cmd_info_T &info){
   msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
   msg_box.setDefaultButton(QMessageBox::Yes);
   if(msg_box.exec() == QMessageBox::Yes){
-    OSInterface::copy(info);
+      if(info.cmd == info.COPY)
+        OSInterface::copy(info);
+      else if(info.cmd == info.MOVE)
+        OSInterface::move(info);
     }
 }
 
@@ -81,7 +84,10 @@ void MainWindow::confirm2(std::string action, cmd_info_T &info){
   msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
   msg_box.setDefaultButton(QMessageBox::Yes);
   if(msg_box.exec() == QMessageBox::Yes){
-    OSInterface::copy(info);
+      if(info.cmd == info.REMOVE)
+        OSInterface::remove(info);
+      else if(info.cmd == info.RENAME)
+        OSInterface::rename(info);
     }
 }
 
@@ -95,6 +101,7 @@ void MainWindow::error(std::string &err){
 }
 
 void MainWindow::prepareLayout(){
+  ui->centralGridLayout->setHorizontalSpacing(20);
   QObject::connect(handler, &MainHandler::ch_list, this, &MainWindow::refreshMainLayout);
   QObject::connect(handler, &MainHandler::confirm1, this, &MainWindow::confirm1);
   QObject::connect(handler, &MainHandler::confirm2, this, &MainWindow::confirm2);
@@ -117,25 +124,17 @@ void MainWindow::prepareLayout(){
   }
 
   for(unsigned int i = 0; i < handler->init_count; ++i){
-      handler->opened_lists.emplace_back(handler->init_dir);
+      handler->list_added();
     }
 
   emit(handler->ch_list(false));
 
-  handler->opened_lists[0].content->setFocus();
- /*
-  MyTreeView *mtv = new MyTreeView(".", "*");
-  mtv->content->move(100, 100);
-  mtv->content->setFixedSize(400,400);
-  ((QTreeView*)mtv->content)->header()->hide();
-  mtv->content->show();
-  */
-
+  handler->opened_lists[0]->content->setFocus();
 }
 
 void MainWindow::updateFocus(){
   for(auto &a : handler->opened_lists){
-    a.content->unFocus();
+    a->content->unFocus();
     }
 }
 
@@ -146,11 +145,11 @@ void MainWindow::handleTab(){
   first = second = nullptr;
   for(auto &a : handler->opened_lists){
       if(first == nullptr){
-          myItem = dynamic_cast <QWidgetItem*>(a.h_layout2->itemAt(0));
+          myItem = dynamic_cast <QWidgetItem*>(a->h_layout2->itemAt(0));
           first = myItem->widget();
           continue;
         }
-      myItem = dynamic_cast <QWidgetItem*>(a.h_layout2->itemAt(0));
+      myItem = dynamic_cast <QWidgetItem*>(a->h_layout2->itemAt(0));
       second = myItem->widget();
       QWidget::setTabOrder(first, second);
       first = second;
@@ -164,10 +163,11 @@ void MainWindow::refreshMainLayout(bool removing){
   row = col = count = 0;
   if(removing){
       auto &a = *(handler->opened_lists.end()-1);
-      ui->centralGridLayout->removeItem(a.v_layout);
+      ui->centralGridLayout->removeItem(a->v_layout);
       handler->opened_lists.pop_back();
+      delete a;
       try{
-        handler->opened_lists.at(handler->opened_lists.size() - 1).content->setFocus();
+        handler->opened_lists.at(handler->opened_lists.size() - 1)->content->setFocus();
       }catch(std::exception e) {}
   }
   for(auto &a : handler->opened_lists){
@@ -176,19 +176,24 @@ void MainWindow::refreshMainLayout(bool removing){
           ++row;
         }
       ++count;
-      if(!a.in_layout){
-          a.in_layout = true;
+      if(!a->in_layout){
+          a->in_layout = true;
           if(!col && (count == handler->opened_lists.size()))
             // ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 2);
-            ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 1);
+            ui->centralGridLayout->addLayout(a->v_layout, row, col, 1, 1);
           else
-            ui->centralGridLayout->addLayout(a.v_layout, row, col, 1, 1);
-          a.content->setFocus();
-          QObject::connect(&a, &OpenedListHandle::updated, this, &MainWindow::handleTab);
-          if((a.view_type == a.TREE) || (a.view_type == a.LIST))
-            QObject::connect((MyTreeView *)a.content, &MyTreeView::focused, this, &MainWindow::updateFocus);
-          else if(a.view_type == a.ICON)
-            QObject::connect((MyIconView *)a.content, &MyIconView::tab, this, &MainWindow::handleTab);
+            ui->centralGridLayout->addLayout(a->v_layout, row, col, 1, 1);
+        /*  if(handler->opened_lists.size() < handler->col_count)
+            a->tb2->setMaximumWidth(ui->centralGridLayout / handler->opened_lists.size());
+          else
+            a->tb2->setMaximumWidth(ui->centralWidget->width() / handler->col_count);
+            */
+          a->content->setFocus();
+          QObject::connect(a, &OpenedListHandle::updated, this, &MainWindow::handleTab);
+          if((a->view_type == a->TREE) || (a->view_type == a->LIST))
+            QObject::connect((MyTreeView *)a->content, &MyTreeView::focused, this, &MainWindow::updateFocus);
+          else if(a->view_type == a->ICON)
+            QObject::connect((MyIconView *)a->content, &MyIconView::tab, this, &MainWindow::handleTab);
         }
       ++col;
 

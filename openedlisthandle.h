@@ -22,6 +22,7 @@
 #include <QListView>
 #include <QScrollBar>
 #include <QToolBar>
+#include <QLabel>
 #include <QObject>
 #include <QMainWindow>
 #include <map>
@@ -35,34 +36,42 @@ class OpenedListHandle: public QWidget{
   Q_OBJECT
 public:
   std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
-  QVBoxLayout *v_layout;
-  QHBoxLayout *h_layout1, *h_layout2, *h_layout3;
+  QVBoxLayout *v_layout, *v_layout2;
+  QHBoxLayout *h_layout1, *h_layout2;
+  QGridLayout *g_layout;
   MyLineEdit *le1;
   ButtonHandle<OpenedListHandle> *up_btt;
   QLineEdit *le2;
+  QLabel *lbl, *lbl2, *lbl3;
   MyViewType *content;
   AbstractView *view;
-  QToolBar *tb;
+  QToolBar *tb, *tb2;
   bool in_layout;
   std::string path;
   enum {TREE, LIST, ICON };
   int view_type;
+  unsigned int size_in;
+  enum {B, KB, MB, GB};
 
   OpenedListHandle() { initLayout(".");}
-  OpenedListHandle(std::string, QWidget *parent = 0);
-  OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
+  OpenedListHandle(std::string, unsigned int, QWidget *parent = 0);
+ // OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
   void delGraphics();
   void changeLayout(int);
   void highlightBtt();
+  void updateLbl();
   template <typename T>
   void connectSignals(){
     if(typeid(T) == typeid(MyTreeView)){
         QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
         QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
-      }else if(typeid(T) == typeid(MyIconView))
-      QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
+      }else if(typeid(T) == typeid(MyIconView)){
+        QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
+      }
+    QObject::connect((T *)content, SIGNAL(rebuild()), this, SLOT(rebuildContent()));
     QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
     QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
+    QObject::connect((T *)content, &T::itemSelectionChanged, this, &OpenedListHandle::selectionChanged);
   }
 
   void initLayout(std::string, AbstractView *tree = 0);
@@ -79,8 +88,10 @@ public slots:
   void patternChanged();
   void pathChanged();
   void setSelection(bool);
+  void rebuildContent();
   //void itemPressed(QTreeWidgetItem *item);
   void itemExpanded(QTreeWidgetItem *item);
+  void selectionChanged();
   void itemActivated(QTreeWidgetItem *item, int col );
   void itemActivated(QTableWidgetItem *item);
 };

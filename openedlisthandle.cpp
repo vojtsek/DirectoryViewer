@@ -1,5 +1,6 @@
 #include "openedlisthandle.h"
 #include "mainhandler.h"
+#include "functions.h"
 #include "mylineedit.h"
 #include "myiconview.h"
 #include "osinterface.h"
@@ -20,6 +21,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 void OpenedListHandle::highlightBtt(){
   for(auto &a : tool_btts){
@@ -142,6 +144,11 @@ void OpenedListHandle::setSelection(bool in){
   std::cout << "Item Text: " << item->text( col ).toStdString();
 }*/
 
+void OpenedListHandle::rebuildContent(){
+  view->rebuild(path, "*");
+  tb2->setMaximumWidth(content->w);
+}
+
 void OpenedListHandle::itemActivated(QTableWidgetItem *item){
       std::string new_path = content->getSelected();
       if(OSInterface::isDir(new_path)){
@@ -149,6 +156,10 @@ void OpenedListHandle::itemActivated(QTableWidgetItem *item){
             new_path = new_path.substr(1, new_path.size());
           le1->setText(QString::fromStdString(new_path)); //signal
         }
+}
+
+void OpenedListHandle::selectionChanged(){
+  updateLbl();
 }
 
 void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int col){
@@ -181,11 +192,44 @@ void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
     }
 }
 
+void OpenedListHandle::updateLbl(){
+  std::stringstream ss;
+  std::string file = content->getSelected();
+  if(file.empty()) return;
+  ss << getBasename(file);
+  lbl->setText(QString::fromStdString(ss.str()));
+  ss.str("");
+  ss.clear();
+  dirEntryT *t = view->osi->dirs[content->getSelIdx()];
+  ss << round((t->byte_size / pow(1024, size_in)));
+  switch(size_in){
+    case B:
+      ss << " B";
+      break;
+    case KB:
+      ss << " KB";
+      break;
+    case MB:
+      ss << " MB";
+      break;
+    case GB:
+      ss << " GB";
+      break;
+    }
+  lbl2->setText(QString::fromStdString(ss.str()));
+  ss.str("");
+  ss.clear();
+  ss << t->perms << " ";
+  ss << t->mod_time;
+  lbl3->setText(QString::fromStdString(ss.str()));
+}
+
 void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   v_layout = new QVBoxLayout();
   h_layout1 = new QHBoxLayout();
   h_layout2 = new QHBoxLayout();
-  h_layout3 = new QHBoxLayout();
+  g_layout = new QGridLayout();
+  v_layout2 = new QVBoxLayout();
   tool_btts.insert(std::pair<Qt::Key, ButtonHandle<OpenedListHandle>>(Qt::Key_F2, ButtonHandle<OpenedListHandle>(Qt::Key_F2, "List view", &OpenedListHandle::toList)));
   tool_btts.insert(std::pair<Qt::Key, ButtonHandle<OpenedListHandle>>(Qt::Key_F3, ButtonHandle<OpenedListHandle>(Qt::Key_F3, "Tree view", &OpenedListHandle::toTree)));
   tool_btts.insert(std::pair<Qt::Key, ButtonHandle<OpenedListHandle>>(Qt::Key_F4, ButtonHandle<OpenedListHandle>(Qt::Key_F4, "Icon view", &OpenedListHandle::toIcon)));
@@ -202,7 +246,6 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   le1->setText(QString::fromStdString(p));
   le2->setMaximumWidth(70);
   le2->setText("*");
-  tb = new QToolBar();
   view_type = LIST;
   if(!tree)
       view = new MTree(p,le2->text().toStdString(), false);
@@ -210,6 +253,18 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
     view = tree;
   content = view->content;
   tb = new QToolBar();
+  lbl = new QLabel();
+  lbl2 = new QLabel();
+  lbl3 = new QLabel();
+  tb = new QToolBar();
+  tb2 = new QToolBar();
+  tb2->addWidget(lbl);
+  tb2->addSeparator();
+  tb2->addWidget(lbl2);
+  tb2->addSeparator();
+  tb2->addWidget(lbl3);
+  //lbl->setStyleSheet(label_style);
+  updateLbl();
   h_layout1->addWidget(le1);
   h_layout1->addWidget(le2);
   h_layout1->addWidget(up_btt->btt);
@@ -231,15 +286,16 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
       tb->addWidget(a.second.btt);
       QObject::connect(a.second.btt, &QPushButton::clicked, this, a.second.fnc);
     }
+  v_layout2->addWidget(tb2);
   highlightBtt();
-  h_layout3->addWidget(tb);
+  v_layout2->addWidget(tb);
   v_layout->addLayout(h_layout1);
   v_layout->addLayout(h_layout2);
-  v_layout->addLayout(h_layout3);
+  v_layout->addLayout(v_layout2);
 }
 
-OpenedListHandle::OpenedListHandle(std::string p, QWidget *parent):QWidget(parent),in_layout(false), view_type(LIST){
-    path = p;
+OpenedListHandle::OpenedListHandle(std::string p, unsigned int s, QWidget *parent):QWidget(parent),in_layout(false), view_type(LIST), path(p), size_in(s){
+   // path = p;
     initLayout(p);
   }
 
@@ -252,9 +308,14 @@ void OpenedListHandle::delGraphics(){
       delete a.second.btt;
     }
   delete tb;
+  delete lbl;
+  delete lbl2;
+  delete lbl3;
+  delete tb2;
   delete h_layout1;
+  delete g_layout;
   delete h_layout2;
-  delete h_layout3;
+  delete v_layout2;
   delete v_layout;
 }
 
@@ -262,7 +323,7 @@ OpenedListHandle::~OpenedListHandle(){
   delGraphics();
 }
 
-OpenedListHandle::OpenedListHandle(const OpenedListHandle &o, QWidget *parent): QWidget(parent){
+/*OpenedListHandle::OpenedListHandle(const OpenedListHandle &o, QWidget *parent): QWidget(parent){
   in_layout = false;
   view_type = o.view_type;
   path = o.path;
@@ -277,4 +338,4 @@ OpenedListHandle::OpenedListHandle(const OpenedListHandle &o, QWidget *parent): 
   content->multi_selection = o.content->multi_selection;
   if(content->is_focused)
     content->setFocus();
-}
+}*/

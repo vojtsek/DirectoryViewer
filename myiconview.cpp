@@ -8,7 +8,7 @@
 #include <string>
 
 int MyIconView::getSelIdx(){
-  return 1;
+  return currentItem()->row() * columnCount() + currentItem()->column();
 }
 
 void MyIconView::focusInEvent(QFocusEvent *e){
@@ -20,16 +20,22 @@ void MyIconView::focusOutEvent(QFocusEvent *e){
   unFocus();
 }
 
+void MyIconView::resizeEvent(QResizeEvent *e)
+{
+    w = e->size().width();
+    emit(rebuild());
+}
+
 void MyIconView::setFocus(){ QWidget::setFocus(); }
 
 std::string MyIconView::getSelected(){
-  //co kdyz je empty
-  //std::cout << this->currentItem()->text().toStdString() << std::endl;
-  return path + OSInterface::dir_sep + this->currentItem()->text().toStdString();
+  if(currentItem())
+    return path + OSInterface::dir_sep + currentItem()->text().toStdString() ;
+  else return "";
 }
 
 void MyIconView::changeSelection(){
-  QBrush brb(QColor(0, 200, 255)), brw(Qt::white);
+  QBrush brb(QColor(150, 200, 255)), brw(Qt::white);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
@@ -59,6 +65,22 @@ void MyIconView::keyPressEvent(QKeyEvent *e){
 void MyIconView::focus(){
   is_focused = true;
   setStyleSheet(focused_list_style);
+  QBrush brb(QColor(150, 200, 255));
+  for(int i = 0; i < rowCount(); ++i){
+      for(int j = 0; j < columnCount(); ++j){
+          if(item(i, j) != nullptr){
+            if(multi_selection.find(path + "/" + item(i, j)->text().toStdString()) != multi_selection.end())
+              item(i, j)->setBackground(brb);
+            }
+        }
+    }
+  /*if(multi_selection.find(selected) != multi_selection.end()){
+    multi_selection.erase(selected);
+    currentItem()->setBackground(brw);
+  }else{
+    multi_selection.insert(selected);
+    currentItem()->setBackground(brb);
+    }*/
 }
 
 void MyIconView::mark(bool m){

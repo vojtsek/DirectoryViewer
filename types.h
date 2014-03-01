@@ -43,7 +43,7 @@ typedef struct{
   std::string src_path;
   std::set<std::string> source_files, paths;
   std::map<std::string,std::set<std::string>> destination_files;
-  enum {COPY, MOVE, VIEW };
+  enum {COPY, MOVE, VIEW, RENAME, REMOVE };
   int cmd;
 } cmd_info_T;
 
@@ -52,6 +52,7 @@ public:
   std::set<std::string> multi_selection;
   bool is_focused, marked;
   std::string path;
+  int w;
   virtual std::string getSelected() = 0;
   virtual int getSelIdx() = 0;
   virtual void setFocus() = 0;
@@ -71,7 +72,7 @@ public:
   int col_width;
   bool recursive;
   AbstractView(std::string, std::string);
-  virtual AbstractView *clone() = 0;
+ // virtual AbstractView *clone() = 0;
   virtual void rebuild(std::string, std::string) = 0;
   //virtual void init(std::string, std::string, bool);
   virtual ~AbstractView(){
@@ -83,7 +84,7 @@ class MTree : public AbstractView{
 public:
   void buildTree(std::string, QTreeWidgetItem *it, bool);
   void init(std::string, std::string, bool);
-  virtual AbstractView *clone();
+  //virtual AbstractView *clone();
   virtual void rebuild(std::string, std::string);
   MTree(std::string, std::string, bool);
   virtual ~MTree() {}
@@ -92,7 +93,7 @@ public:
 class MIcon : public AbstractView{
 public:
   void init(std::string, std::string);
-  virtual AbstractView *clone();
+  //virtual AbstractView *clone();
   virtual void rebuild(std::string, std::string);
   MIcon(std::string, std::string);
   virtual ~MIcon() {}

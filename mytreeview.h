@@ -18,6 +18,7 @@ public:
   virtual void focusInEvent(QFocusEvent *);
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
+  virtual void resizeEvent(QResizeEvent *e);
   std::string getSelected();
   virtual void unFocus();
   virtual void setFocus();
@@ -27,6 +28,7 @@ public:
   void changeSelection();
   virtual int getSelIdx();
 signals:
+  void rebuild();
   void focused();
   void unfocused();
   void stepup();

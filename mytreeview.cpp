@@ -31,11 +31,18 @@ void MyTreeView::focusOutEvent(QFocusEvent *e){
   unFocus();
 }
 
+void MyTreeView::resizeEvent(QResizeEvent *e)
+{
+    w = e->size().width();
+    emit(rebuild());
+}
+
 void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
 
 std::string MyTreeView::getSelected(){
-  //co kdyz je empty
+  if(currentItem())
   return path + OSInterface::dir_sep + currentItem()->text(0).toStdString() ;
+  else return "";
 }
 
 void MyTreeView::changeSelection(){
@@ -68,6 +75,13 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
 void MyTreeView::focus(){
   is_focused = true;
   setStyleSheet(focused_list_style);
+  QBrush brb(QColor(150, 200, 255));
+  for(int i = 0; i < topLevelItemCount(); ++i){
+      if(topLevelItem(i) != nullptr){
+          if(multi_selection.find(path + "/" + topLevelItem(i)->text(0).toStdString()) != multi_selection.end())
+            topLevelItem(i)->setBackground(0,brb);
+        }
+    }
 }
 
 void MyTreeView::mark(bool m){

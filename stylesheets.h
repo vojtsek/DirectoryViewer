@@ -5,7 +5,12 @@
 
 const QString list_style = "selection-background-color:#09b;"
     "selection-color:#000;"
-    "color:#999;";
+    "color:#888;";
+
+const QString label_style = "QLabel {"
+    "font-style:italic;"
+    "font-weight:bold;"
+    "color:#000; }";
 
 const QString marked_btt_style = "QAbstractButton {"
     "border-radius: 6px;"
@@ -36,7 +41,8 @@ const QString focused_list_style = "QTableView, QTreeView {"
 
 const QString unfocused_list_style = "QTableView, QTreeView {"
     + list_style +
-    "selection-background-color:#fff;"
+    "selection-background-color:#ccc;"
+    "background:#ddd;"
     "border: none;}"
     "QStandardItem {margin:5;}";
 

@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     functions.cpp \
     mylineedit.cpp \
     mytreeview.cpp \
-    myiconview.cpp
+    myiconview.cpp \
+    mydialog.cpp
 
 HEADERS  += mainwindow.h \
     mainhandler.h \
@@ -35,7 +36,8 @@ HEADERS  += mainwindow.h \
     mylineedit.h \
     mytreeview.h \
     stylesheets.h \
-    myiconview.h
+    myiconview.h \
+    mydialog.h
 
 FORMS    += mainwindow.ui
 

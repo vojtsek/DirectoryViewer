@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <QLabel>
 #include <QTableView>
 #include <QTreeView>
 #include <QPushButton>
@@ -86,7 +87,7 @@ void MTree::buildTree(std::string root, QTreeWidgetItem *it, bool top){
     }
 }
 
-AbstractView *MTree::clone(){
+/*AbstractView *MTree::clone(){
   if(path.empty()) return nullptr;
   MTree *tmp = new MTree(content->path, pattern, recursive);
   tmp->content->multi_selection = content->multi_selection;
@@ -98,9 +99,9 @@ AbstractView *MTree::clone(){
         }
     }
   return tmp;
-}
+}*/
 
-AbstractView *MIcon::clone(){
+/*AbstractView *MIcon::clone(){
   if(path.empty()) return nullptr;
   MIcon *tmp = new MIcon(content->path, pattern);
   tmp->content->multi_selection = content->multi_selection;
@@ -110,16 +111,16 @@ AbstractView *MIcon::clone(){
       if(content->multi_selection.find(path + OSInterface::dir_sep + it->text(0).toStdString()) != content->multi_selection.end()){
         it->setForeground(0, brr);
         }
-    }*/
+    }
   return tmp;
-}
+}*/
 
 void MIcon::rebuild(std::string path, std::string pattern){
   ((MyIconView *) content)->clear();
   osi->dirs.clear();
   if(!osi->dirs.size())
   osi->getDirInfo(path, pattern);
-  int w = ((MyIconView *)content)->width();
+  int w = ((MyIconView *)content)->w;
   int cols = w / col_width;
   ((MyIconView *)content)->setRowCount(osi->dirs.size() / cols + 1);
   ((MyIconView *)content)->setColumnCount(cols);
@@ -146,9 +147,7 @@ void MIcon::rebuild(std::string path, std::string pattern){
       std::stringstream ss;
       item = new QTableWidgetItem(QString::fromStdString(e->name));
       //icon_item = new QTableWidgetItem();
-      item->setTextAlignment(0);
       item->setIcon(base_icon);
-
       if(e->type == e->DIR){
           item->setIcon(dir_icon);
           item->setFont(bold_font);
@@ -173,6 +172,7 @@ void MIcon::rebuild(std::string path, std::string pattern){
       QPersistentModelIndex nextIndex = ((MyTreeView*)content)->indexAt(QPoint(0, 0));
       ((MyTreeView*)content)->selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
     }
+  ((MyIconView*)content)->sizeHint();
 }
 
 
@@ -180,10 +180,7 @@ void MTree::rebuild(std::string p, std::string pat){
   osi->dirs.clear();
   osi->getDirInfo(p, pat);
   content->path = p;
-  int count = ((MyTreeView *)content)->topLevelItemCount();
-  for(int i = 0; i < count; ++i){
-      delete ((MyTreeView *) content)->takeTopLevelItem(0);
-    }
+  ((MyTreeView *)content)->clear();
   buildTree(p, nullptr, true);
   ((MyTreeView*)content)->setSelectionBehavior(QTreeWidget::SelectRows);
   ((MyTreeView*)content)->setHeaderHidden(true);
@@ -210,7 +207,7 @@ MIcon::MIcon(std::string path, std::string pattern): AbstractView(path, pattern)
 }
 
 void MIcon::init(std::string path, std::string pattern){
-  col_width = 120;
+  col_width = 140;
   content = new MyIconView();
   rebuild(path, pattern);
 }
