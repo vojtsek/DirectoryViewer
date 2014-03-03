@@ -119,7 +119,11 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
         }
     }else{
       std::ifstream file(src, std::ios::in | std::ios::binary | std::ios::ate);
-      std::ofstream nfile(dst, std::ios::out | std::ios::binary);
+      std::ifstream test(dst, std::ios::in | std::ios::binary | std::ios::ate);
+      if(test.tellg() > 0)
+        throw new OSException(dst, "File exists");
+      test.close();
+      std::ofstream nfile(dst, std::ios::out | std::ios::binary | std::ios::ate);
       char buf[BUFSIZE];
       long long copied = 0;
       if(!nfile.is_open())
@@ -139,6 +143,9 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
             throw new OSException(src, "Failed to copy.");
         }else
         throw new OSException(src, "Failed to open.");
+      nfile.flush();
+      file.close();
+      nfile.close();
     }
 }
 
@@ -164,7 +171,7 @@ void OSInterface::doMove(std::string &src, std::string &dst){
     }else{
 
       ss << "Move " << src << " to: " << dst << std::endl;
-      if(((link(src.c_str(), dst.c_str())) != -1) && (unlink(src.c_str()) == -1))
+      if(((link(src.c_str(), dst.c_str())) == -1) || (unlink(src.c_str()) == -1))
         throw new OSException(ss.str(), strerror(errno));
     }
 }
@@ -193,20 +200,22 @@ void OSInterface::doRemove(std::string &src){
     }
 }
 
-/*void OSInterface::doRename(std::string &src, std::string &dst){
-  std::stringstream ss;
-  if(isDir(src)){
-      doMove(src, dst);
-      if(rmdir(src.c_str()) == -1)
-        throw new OSException(src, strerror(errno));
-    }else{
-      ss << "Rename: " << src << " -> " << dst << std::endl;
-      if(((link(src.c_str(), dst.c_str())) != -1) && (unlink(src.c_str()) == -1))
-        throw new OSException(ss.str(), strerror(errno));
-    }
-} */
-
 std::string OSInterface::getPrefix(){ return "/"; }
+
+long long OSInterface::getSize(std::string p){
+  struct stat *finfo = new struct stat();
+  lstat(p.c_str(), finfo);
+  return finfo->st_size;
+}
+
+bool OSInterface::isOpenable(std::string path){
+  if (getSize(path) > pow(1024, 2)){
+      std::string warn = "File is quite large. Proceed with opening?";
+      if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+        return false;
+    }
+  return true;
+}
 
 bool OSInterface::isDir(std::string path){
   DIR *dir;

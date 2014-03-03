@@ -1,12 +1,14 @@
 #include "types.h"
 #include "osinterface.h"
 #include "mytreeview.h"
+#include "myviewer.h"
 #include "myiconview.h"
 
 #include <sstream>
 #include <map>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <QLabel>
 #include <QTableView>
 #include <QTreeView>
@@ -17,12 +19,16 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 #include <QApplication>
+#include <QTreeWidget>
+#include <QTreeWidgetItem>
+#include <QTextEdit>
 #include <QPersistentModelIndex>
 
 AbstractView::AbstractView(std::string p, std::string pat): path(p), pattern(pat){
   osi = new OSInterface();
   try{
-    osi->getDirInfo(path, pattern);
+    if(OSInterface::isDir(path))
+      osi->getDirInfo(path, pattern);
   }catch(OSException *ex){
     ex->process();
   }
@@ -33,8 +39,8 @@ void MTree::buildTree(std::string root, QTreeWidgetItem *it, bool top){
   try{
     os.getDirInfo(root, pattern);
   }catch(OSException *e){
-    //e->process();
-    //return;
+    std::cout << e->what() << std::endl;
+    return;
   }
   QIcon dir_icon("directory.png");
   QIcon ar_icon("archive.png");
@@ -81,39 +87,11 @@ void MTree::buildTree(std::string root, QTreeWidgetItem *it, bool top){
             }
         }
       if(it != nullptr){
-      it->addChild(item);
-      it->setExpanded(false);
+          it->addChild(item);
+          it->setExpanded(false);
         }
     }
 }
-
-/*AbstractView *MTree::clone(){
-  if(path.empty()) return nullptr;
-  MTree *tmp = new MTree(content->path, pattern, recursive);
-  tmp->content->multi_selection = content->multi_selection;
-  QBrush brr(QColor(0, 159, 255));
-  for(int i = 0; i < ((MyTreeView *)tmp->content)->topLevelItemCount(); ++i){
-      QTreeWidgetItem *it = ((MyTreeView *)tmp->content)->topLevelItem(i);
-      if(content->multi_selection.find(path + OSInterface::dir_sep + it->text(0).toStdString()) != content->multi_selection.end()){
-        it->setForeground(0, brr);
-        }
-    }
-  return tmp;
-}*/
-
-/*AbstractView *MIcon::clone(){
-  if(path.empty()) return nullptr;
-  MIcon *tmp = new MIcon(content->path, pattern);
-  tmp->content->multi_selection = content->multi_selection;
-  QBrush brr(QColor(0, 159, 255));
- /* for(int i = 0; i < ((MyTreeView *)tmp->content)->topLevelItemCount(); ++i){
-      QTreeWidgetItem *it = ((MyTreeView *)tmp->content)->topLevelItem(i);
-      if(content->multi_selection.find(path + OSInterface::dir_sep + it->text(0).toStdString()) != content->multi_selection.end()){
-        it->setForeground(0, brr);
-        }
-    }
-  return tmp;
-}*/
 
 void MIcon::rebuild(std::string path, std::string pattern){
   ((MyIconView *) content)->clear();
@@ -129,7 +107,7 @@ void MIcon::rebuild(std::string path, std::string pattern){
       ((MyIconView*)content)->setColumnWidth(i, col_width - 1);
     }
   content->path = path;
-  QTableWidgetItem *item, *icon_item;
+  QTableWidgetItem *item;
   QIcon dir_icon("directory.png");
   QIcon arch_icon("archive.png");
   QIcon base_icon("file.png");
@@ -146,7 +124,6 @@ void MIcon::rebuild(std::string path, std::string pattern){
       if((e->name == ".") || (e->name == "..")) continue;
       std::stringstream ss;
       item = new QTableWidgetItem(QString::fromStdString(e->name));
-      //icon_item = new QTableWidgetItem();
       item->setIcon(base_icon);
       if(e->type == e->DIR){
           item->setIcon(dir_icon);
@@ -172,23 +149,39 @@ void MIcon::rebuild(std::string path, std::string pattern){
       QPersistentModelIndex nextIndex = ((MyTreeView*)content)->indexAt(QPoint(0, 0));
       ((MyTreeView*)content)->selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
     }
-  ((MyIconView*)content)->sizeHint();
 }
 
 
 void MTree::rebuild(std::string p, std::string pat){
   osi->dirs.clear();
-  osi->getDirInfo(p, pat);
+  try{
+    osi->getDirInfo(p, pat);
+  }catch(OSException *e){
+    std::cout << e->what() << std::endl;
+  }
   content->path = p;
   ((MyTreeView *)content)->clear();
   buildTree(p, nullptr, true);
   ((MyTreeView*)content)->setSelectionBehavior(QTreeWidget::SelectRows);
   ((MyTreeView*)content)->setHeaderHidden(true);
-  ((MyTreeView*)content)->setColumnWidth(0, 250);
+  ((MyTreeView*)content)->setColumnWidth(0, 280);
   if(!osi->dirs.empty()){
       QPersistentModelIndex nextIndex = ((MyTreeView*)content)->indexAt(QPoint(0, 0));
       ((MyTreeView*)content)->selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
     }
+}
+
+void MView::rebuild(std::string p, std::string pat){
+  std::ifstream in(p);
+  std::string line;
+  ((MyViewer *) content)->setReadOnly(true);
+  while(in.good()){
+      getline(in, line);
+      ((MyViewer *) content)->appendPlainText(QString::fromStdString(line));
+    }
+  QTextCursor cursor(((MyViewer *) content)->textCursor());
+  cursor.movePosition(QTextCursor::Start);
+  ((MyViewer *) content)->setTextCursor(cursor);
 }
 
 void MTree::init(std::string p, std::string pat, bool rec){
@@ -209,5 +202,14 @@ MIcon::MIcon(std::string path, std::string pattern): AbstractView(path, pattern)
 void MIcon::init(std::string path, std::string pattern){
   col_width = 140;
   content = new MyIconView();
+  rebuild(path, pattern);
+}
+
+MView::MView(std::string path, std::string pattern): AbstractView(path, pattern) {
+  init(path, pattern);
+}
+
+void MView::init(std::string path, std::string pattern){
+  content = new MyViewer();
   rebuild(path, pattern);
 }

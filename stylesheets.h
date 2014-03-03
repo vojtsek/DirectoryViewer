@@ -33,20 +33,20 @@ const QString btt_style = "QAbstractButton {"
     "QPushButton:pressed {"
     "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dadbde, stop: 1 #f6f7fa); }";
 
-const QString focused_list_style = "QTableView, QTreeView {"
+const QString focused_list_style = "QPlainTextEdit, QTableView, QTreeView {"
     + list_style +
     "color:#000;"
     "border: 1px solid #000; }"
     "QStandardItem {margin:5;}";
 
-const QString unfocused_list_style = "QTableView, QTreeView {"
+const QString unfocused_list_style = "QPlainTextEdit, QTableView, QTreeView {"
     + list_style +
     "selection-background-color:#ccc;"
     "background:#ddd;"
     "border: none;}"
     "QStandardItem {margin:5;}";
 
-const QString marked_list_style = "QTableView, QTreeView {"
+const QString marked_list_style = "QPlainTextEdit, QTableView, QTreeView {"
     + list_style +
     "background:#efe;"
     "color:#000;border: 1px solid #09b;}";

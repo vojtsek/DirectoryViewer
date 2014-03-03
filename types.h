@@ -59,6 +59,7 @@ public:
   virtual void unFocus() = 0;
   virtual void focus() = 0;
   virtual void mark(bool) = 0;
+  virtual void die() = 0;
   virtual QWidget *getContent() = 0;
   MyViewType(): is_focused(false), marked(false), path("") {}
   virtual ~MyViewType() {}
@@ -99,4 +100,12 @@ public:
   virtual ~MIcon() {}
 };
 
+class MView : public AbstractView{
+public:
+  void init(std::string, std::string pat = "");
+  //virtual AbstractView *clone();
+  virtual void rebuild(std::string, std::string pat = "");
+  MView(std::string, std::string pat = "");
+  virtual ~MView() {}
+};
 #endif //TYPES_H

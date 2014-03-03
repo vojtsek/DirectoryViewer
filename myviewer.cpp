@@ -1,41 +1,50 @@
+#include "myviewer.h"
+
 #include "myiconview.h"
 #include "types.h"
 #include "osinterface.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
+#include <QFocusEvent>
+#include <QTextEdit>
 #include <QBrush>
 #include <iostream>
 #include <string>
 
-int MyIconView::getSelIdx(){
-  return currentItem()->row() * columnCount() + currentItem()->column();
+int MyViewer::getSelIdx(){
+  return 0;
 }
 
-void MyIconView::focusInEvent(QFocusEvent *e){
+void MyViewer::die(){
+  setFocusPolicy(Qt::NoFocus);
+  setFixedSize(0, 0);
+}
+
+void MyViewer::focusInEvent(QFocusEvent *e){
   emit(focused());
   focus();
+  //QPlainTextEdit::focusInEvent(e);
 }
 
-void MyIconView::focusOutEvent(QFocusEvent *e){
+void MyViewer::focusOutEvent(QFocusEvent *e){
   unFocus();
+  //QPlainTextEdit::focusOutEvent(e);
 }
 
-void MyIconView::resizeEvent(QResizeEvent *e)
+void MyViewer::resizeEvent(QResizeEvent *e)
 {
     w = e->size().width();
-    emit(rebuild());
+  //  emit(rebuild());
 }
 
-void MyIconView::setFocus(){ QWidget::setFocus(); }
+void MyViewer::setFocus(){ QWidget::setFocus(); }
 
-std::string MyIconView::getSelected(){
-  if(currentItem())
-    return path + OSInterface::dir_sep + currentItem()->text().toStdString() ;
-  else return "";
+std::string MyViewer::getSelected(){
+  return "";
 }
-
-void MyIconView::updateSelection(){
-  QBrush brb(QColor(150, 200, 255));
+/*
+void MyViewer::updateSelection(){
+  /*QBrush brb(QColor(150, 200, 255));
   for(int i = 0; i < rowCount(); ++i){
       for(int j = 0; j < columnCount(); ++j){
           if(item(i, j) != nullptr){
@@ -46,46 +55,40 @@ void MyIconView::updateSelection(){
     }
 }
 
-void MyIconView::changeSelection(){
+void MyViewer::changeSelection(){
   QBrush brb(QColor(150, 200, 255)), brw(Qt::white);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
-    currentItem()->setBackground(brw);
+    //currentItem()->setBackground(brw);
   }else{
     multi_selection.insert(selected);
-    currentItem()->setBackground(brb);
+    //currentItem()->setBackground(brb);
     }
 }
+*/
 
-void MyIconView::die(){
-  setFocusPolicy(Qt::NoFocus);
-  setFixedSize(0, 0);
-}
-
-void MyIconView::keyPressEvent(QKeyEvent *e){
+void MyViewer::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_M)
     mark(!marked);
-  else if(e->key() == Qt::Key_S)
-    changeSelection();
   else if(e->key() == Qt::Key_Backspace){
-      emit(stepup());
+      emit(chlayout());
       setFocus();
     }else if(e->key() == Qt::Key_F1)
     emit(chlayout());
   else if(e->key() == Qt::Key_Tab){
       QWidget::keyPressEvent(e);
-  }else
-    QTableWidget::keyPressEvent(e);
+  }
+ QPlainTextEdit::keyPressEvent(e);
 }
 
-void MyIconView::focus(){
+void MyViewer::focus(){
   is_focused = true;
   setStyleSheet(focused_list_style);
-  updateSelection();
+  //updateSelection();
 }
 
-void MyIconView::mark(bool m){
+void MyViewer::mark(bool m){
   if(m){ //oznacit
       marked = true;
       setStyleSheet(marked_list_style);
@@ -95,14 +98,15 @@ void MyIconView::mark(bool m){
     }
 }
 
-void MyIconView::unFocus(){
+void MyViewer::unFocus(){
   is_focused = false;
   if(!marked){
     setStyleSheet(unfocused_list_style);
-    updateSelection();
+   // updateSelection();
   }else mark(true);
 }
 
-QWidget * MyIconView::getContent(){
+QWidget * MyViewer::getContent(){
   return (QWidget *) this;
 }
+

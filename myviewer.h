@@ -1,21 +1,16 @@
-#ifndef MYICONVIEW_H
-#define MYICONVIEW_H
+#ifndef MYVIEWER_H
+#define MYVIEWER_H
 
 #include "types.h"
-#include "QTableWidget"
+#include <QPlainTextEdit>
+#include <QLineEdit>
 
-class MyIconView : public QTableWidget, public MyViewType
+class MyViewer : public QPlainTextEdit, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyIconView(QWidget *p = 0): QTableWidget(p), MyViewType() {
-    setSelectionBehavior( QAbstractItemView::SelectItems );
-    setSelectionMode( QAbstractItemView::SingleSelection );
-    setEditTriggers(QAbstractItemView::EditTriggers(0));
-    w = width();
-  }
- // MyTreeView(const MyTreeView&);
-  virtual ~MyIconView() {}
+  MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType() {}
+  virtual ~MyViewer() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
@@ -26,17 +21,16 @@ public:
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
-  void changeSelection();
-  void updateSelection();
   virtual int getSelIdx();
   virtual void die();
 signals:
   void focused();
   void rebuild();
   void unfocused();
+  void itemSelectionChanged();
   void stepup();
   void tab();
   void chlayout();
 };
 
-#endif // MYICONVIEW_H
+#endif // MYVIEWER_H

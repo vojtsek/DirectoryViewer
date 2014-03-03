@@ -3,6 +3,8 @@
 #include "functions.h"
 #include "mylineedit.h"
 #include "myiconview.h"
+#include "mytreeview.h"
+#include "myviewer.h"
 #include "osinterface.h"
 #include "stylesheets.h"
 #include "types.h"
@@ -17,8 +19,10 @@
 #include <QKeyEvent>
 #include <QToolBar>
 #include <QModelIndex>
+#include <QThread>
 #include <QObject>
 #include <map>
+#include <set>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -35,40 +39,57 @@ void OpenedListHandle::highlightBtt(){
     }
 }
 
+void OpenedListHandle::clean(){
+  for(auto a : to_del){
+    delete a;
+    }
+  to_del.clear();
+}
+
 void OpenedListHandle::changeLayout(int type){
+  clean();
+  to_del.push_back(view);
+  content->die();
+  //((QWidget *) content)->setFixedSize(0, 0);
+ // ((QWidget *) content)->setFocusPolicy(Qt::NoFocus);
   view_type = type;
+  std::set<std::string> sel = content->multi_selection;
   bool was_focused = content->is_focused;
   bool was_marked = content->marked;
+  QWidgetItem *myItem;
+  myItem = dynamic_cast <QWidgetItem*>(h_layout2->itemAt(0));
+  h_layout2->removeWidget(myItem->widget());
   if((view_type == TREE) || (view_type == LIST))
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
-  //delete ((MyTreeView *) view->content)->model();
   switch (type) {
     case TREE:
-      delete view;
       view = new MTree(path, le2->text().toStdString(), true);
       content = view->content;
       h_layout2->addWidget((MyTreeView *)content);
       break;
      case LIST:
-      delete view;
       view = new MTree(path, le2->text().toStdString(), false);
       content = view->content;
       h_layout2->addWidget((MyTreeView *)content);
       break;
     case ICON:
-      delete view;
       view = new MIcon(path, le2->text().toStdString());
-      view->rebuild(path, le2->text().toStdString());
+      //view->rebuild(path, le2->text().toStdString());
       content = view->content;
-      h_layout2->addWidget((MyIconView *)content);
-      ((MyIconView *) content)->resizeColumnsToContents();
-      view->rebuild(path, le2->text().toStdString());
-    default:
+      h_layout2->addWidget((MyIconView *) content);
+      //((MyIconView *) content)->resizeColumnsToContents();
+      //view->rebuild(path, le2->text().toStdString());
+      break;
+    case VIEW:
+      view = new MView(path);
+      content = view->content;
+      h_layout2->addWidget((MyViewer *)content);
       break;
     }
   highlightBtt();
   if(was_marked)
     content->mark(true);
+  content->multi_selection = sel;
   if(was_focused){
     content->setFocus();
     content->focus();
@@ -77,8 +98,11 @@ void OpenedListHandle::changeLayout(int type){
     connectSignals<MyTreeView>();
   else if (view_type == ICON)
     connectSignals<MyIconView>();
+  else if (view_type == VIEW)
+    connectSignals<MyViewer>();
   emit(updated());
   h_layout2->update();
+
 }
 
 void OpenedListHandle::toTree(){
@@ -100,7 +124,6 @@ void OpenedListHandle::chlayout(){
     changeLayout(ICON);
   else
     changeLayout(LIST);
-  //view->rebuild(path, "*");
 }
 
 void OpenedListHandle::patternChanged(){
@@ -125,6 +148,7 @@ void OpenedListHandle::pathChanged(){
       path = le1->text().toStdString();
     view->rebuild(path, "*");
     }
+  if(view_type == VIEW) changeLayout(LIST);
 }
 
 void OpenedListHandle::setSelection(bool in){
@@ -145,17 +169,27 @@ void OpenedListHandle::setSelection(bool in){
 }*/
 
 void OpenedListHandle::rebuildContent(){
-  view->rebuild(path, "*");
+  if(view_type == ICON)
+    view->rebuild(path, "*");
   tb2->setMaximumWidth(content->w);
+}
+
+void OpenedListHandle::processItem(std::string new_path){
+  if(OSInterface::isDir(new_path)){
+      if(le1->text().toStdString() == OSInterface::getPrefix())
+        new_path = new_path.substr(1, new_path.size());
+      le1->setText(QString::fromStdString(new_path)); //signal
+    }else if(OSInterface::isOpenable(new_path)){
+      std::string old = path;
+      path = new_path;
+      changeLayout(VIEW);
+      path = old;
+    }
 }
 
 void OpenedListHandle::itemActivated(QTableWidgetItem *item){
       std::string new_path = content->getSelected();
-      if(OSInterface::isDir(new_path)){
-          if(le1->text().toStdString() == OSInterface::getPrefix())
-            new_path = new_path.substr(1, new_path.size());
-          le1->setText(QString::fromStdString(new_path)); //signal
-        }
+      processItem(new_path);
 }
 
 void OpenedListHandle::selectionChanged(){
@@ -167,25 +201,29 @@ void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int col){
       item->setExpanded(!item->isExpanded());
     }else{
       std::string new_path = content->getSelected();
-      if(OSInterface::isDir(new_path)){
-          if(le1->text().toStdString() == OSInterface::getPrefix())
-            new_path = new_path.substr(1, new_path.size());
-          le1->setText(QString::fromStdString(new_path)); //signal
-        }
+      processItem(new_path);
     }
 }
 
 void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
-  std::string p, path;
+  std::string p, tmp, path;
   QTreeWidgetItem *par = it->parent();
   while(par){
       p = par->text(0).toStdString() + OSInterface::dir_sep + p;
       par = par->parent();
     }
-  p = content->path + OSInterface::dir_sep + p + OSInterface::dir_sep + it->text(0).toStdString();
+  tmp = p;
+  p = content->path;
+  if (content->path != OSInterface::getPrefix())
+    p = p + OSInterface::dir_sep;
+  if(!tmp.empty())
+    p = p + tmp + OSInterface::dir_sep + it->text(0).toStdString();
+  else
+    p = p + it->text(0).toStdString();
   for(int r = 0; r < it->childCount(); ++r)
     {
       QTreeWidgetItem *chi = it->child(r);
+      if((chi == nullptr) || (chi->childCount())) continue;
       path = p + OSInterface::dir_sep + chi->text(0).toStdString();
       if(OSInterface::isDir(path))
         ((MTree *)view)->buildTree(path, chi, false);
@@ -248,7 +286,7 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   le2->setText("*");
   view_type = LIST;
   if(!tree)
-      view = new MTree(p,le2->text().toStdString(), false);
+     view = new MTree(p,le2->text().toStdString(), false);
   else
     view = tree;
   content = view->content;
@@ -320,6 +358,7 @@ void OpenedListHandle::delGraphics(){
 }
 
 OpenedListHandle::~OpenedListHandle(){
+  clean();
   delGraphics();
 }
 

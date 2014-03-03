@@ -25,8 +25,10 @@ public:
   virtual void focus();
   virtual void mark(bool);
   virtual QWidget *getContent();
-  void changeSelection();
+  void changeSelection(int);
+  void updateSelection();
   virtual int getSelIdx();
+  virtual void die();
 signals:
   void rebuild();
   void focused();

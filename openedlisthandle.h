@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QMainWindow>
 #include <map>
+#include <vector>
 #include <string>
 #include <iostream>
 
@@ -36,6 +37,7 @@ class OpenedListHandle: public QWidget{
   Q_OBJECT
 public:
   std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
+  std::vector<AbstractView *> to_del;
   QVBoxLayout *v_layout, *v_layout2;
   QHBoxLayout *h_layout1, *h_layout2;
   QGridLayout *g_layout;
@@ -48,7 +50,7 @@ public:
   QToolBar *tb, *tb2;
   bool in_layout;
   std::string path;
-  enum {TREE, LIST, ICON };
+  enum {TREE, LIST, ICON, VIEW};
   int view_type;
   unsigned int size_in;
   enum {B, KB, MB, GB};
@@ -59,7 +61,9 @@ public:
   void delGraphics();
   void changeLayout(int);
   void highlightBtt();
+  void clean();
   void updateLbl();
+  void processItem(std::string);
   template <typename T>
   void connectSignals(){
     if(typeid(T) == typeid(MyTreeView)){
@@ -71,7 +75,6 @@ public:
     QObject::connect((T *)content, SIGNAL(rebuild()), this, SLOT(rebuildContent()));
     QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
     QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
-    QObject::connect((T *)content, &T::itemSelectionChanged, this, &OpenedListHandle::selectionChanged);
   }
 
   void initLayout(std::string, AbstractView *tree = 0);

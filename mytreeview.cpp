@@ -45,8 +45,7 @@ std::string MyTreeView::getSelected(){
   else return "";
 }
 
-void MyTreeView::changeSelection(){
-  int idx = getSelIdx();
+void MyTreeView::changeSelection(int idx){
   QBrush brb(QColor(150, 200, 255)), brw(Qt::white);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
@@ -58,11 +57,16 @@ void MyTreeView::changeSelection(){
     }
 }
 
+void MyTreeView::die(){
+  setFocusPolicy(Qt::NoFocus);
+  setFixedSize(0, 0);
+}
+
 void MyTreeView::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_M)
     mark(!marked);
   else if(e->key() == Qt::Key_S)
-    changeSelection();
+    changeSelection(getSelIdx());
   else if(e->key() == Qt::Key_Backspace){
       emit(stepup());
       setFocus();
@@ -72,9 +76,7 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
     QTreeWidget::keyPressEvent(e);
 }
 
-void MyTreeView::focus(){
-  is_focused = true;
-  setStyleSheet(focused_list_style);
+void MyTreeView::updateSelection(){
   QBrush brb(QColor(150, 200, 255));
   for(int i = 0; i < topLevelItemCount(); ++i){
       if(topLevelItem(i) != nullptr){
@@ -82,6 +84,12 @@ void MyTreeView::focus(){
             topLevelItem(i)->setBackground(0,brb);
         }
     }
+}
+
+void MyTreeView::focus(){
+  is_focused = true;
+  setStyleSheet(focused_list_style);
+  updateSelection();
 }
 
 void MyTreeView::mark(bool m){
@@ -100,7 +108,8 @@ QWidget *MyTreeView::getContent(){
 
 void MyTreeView::unFocus(){
   is_focused = false;
-  if(!marked)
-    setStyleSheet(unfocused_list_style);
-  else mark(true);
+  if(!marked){
+      setStyleSheet(unfocused_list_style);
+      updateSelection();
+  }else mark(true);
 }

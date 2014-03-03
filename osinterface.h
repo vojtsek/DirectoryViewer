@@ -40,6 +40,8 @@ public:
   static std::string getCWD();
   static std::string getPrefix();
   static bool isDir(std::string);
+  static long long getSize(std::string);
+  static bool isOpenable(std::string);
 };
 
 class OSException: public MyException{
