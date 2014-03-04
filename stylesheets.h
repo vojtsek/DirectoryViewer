@@ -3,7 +3,7 @@
 
 #include <QString>
 
-const QString list_style = "selection-background-color:#09b;"
+const QString list_style ="selection-background-color:#09b;"
     "selection-color:#000;"
     "color:#888;";
 

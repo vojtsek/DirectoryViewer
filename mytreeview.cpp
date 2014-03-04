@@ -34,7 +34,8 @@ void MyTreeView::focusOutEvent(QFocusEvent *e){
 void MyTreeView::resizeEvent(QResizeEvent *e)
 {
     w = e->size().width();
-    emit(rebuild());
+    if(w)
+      emit(rebuild());
 }
 
 void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
@@ -46,15 +47,13 @@ std::string MyTreeView::getSelected(){
 }
 
 void MyTreeView::changeSelection(int idx){
-  QBrush brb(QColor(150, 200, 255)), brw(Qt::white);
   std::string selected = getSelected();
   if(multi_selection.find(selected) != multi_selection.end()){
     multi_selection.erase(selected);
-    topLevelItem(idx)->setBackground(0, brw);
   }else{
     multi_selection.insert(selected);
-    topLevelItem(idx)->setBackground(0, brb);
     }
+  updateSelection();
 }
 
 void MyTreeView::die(){
@@ -63,25 +62,58 @@ void MyTreeView::die(){
 }
 
 void MyTreeView::keyPressEvent(QKeyEvent *e){
-  if(e->key() == Qt::Key_M)
+  if(e->key() == Qt::Key_Insert)
     mark(!marked);
-  else if(e->key() == Qt::Key_S)
+  else if(e->key() == Qt::Key_Shift)
     changeSelection(getSelIdx());
   else if(e->key() == Qt::Key_Backspace){
       emit(stepup());
       setFocus();
     }else if(e->key() == Qt::Key_F1)
       emit(chlayout());
+  else if((e->key() == Qt::Key_Down) || (e->key() == Qt::Key_Up)){
+      QTreeWidget::keyPressEvent(e);
+      if(e->modifiers() & Qt::ShiftModifier)
+        changeSelection(getSelIdx());
+    }
     else
     QTreeWidget::keyPressEvent(e);
 }
 
 void MyTreeView::updateSelection(){
   QBrush brb(QColor(150, 200, 255));
+  QBrush brw;
+  if(marked)
+    brw = QBrush(QColor(238, 255, 238));
+  else
+    brw = QBrush(QColor(255, 255, 255));
+
+  QFont sel_font, base_font;
+  base_font.setFamily("Verdana");
+  sel_font.setFamily("Helvetica");
+  sel_font.setUnderline(true);
+  sel_font.setLetterSpacing(QFont::AbsoluteSpacing, 2);
   for(int i = 0; i < topLevelItemCount(); ++i){
       if(topLevelItem(i) != nullptr){
-          if(multi_selection.find(path + "/" + topLevelItem(i)->text(0).toStdString()) != multi_selection.end())
-            topLevelItem(i)->setBackground(0,brb);
+          if(multi_selection.find(path + OSInterface::dir_sep + topLevelItem(i)->text(0).toStdString()) != multi_selection.end()){
+              topLevelItem(i)->setBackground(0,brb);
+              topLevelItem(i)->setFont(0, sel_font);
+              topLevelItem(i)->setBackground(1,brb);
+              topLevelItem(i)->setFont(1, sel_font);
+              topLevelItem(i)->setBackground(2,brb);
+              topLevelItem(i)->setFont(2, sel_font);
+            }
+          else{
+              if(OSInterface::isDir(path + OSInterface::dir_sep + topLevelItem(i)->text(0).toStdString()))
+                base_font.setBold(true);
+              topLevelItem(i)->setBackground(0,brw);
+              topLevelItem(i)->setBackground(1,brw);
+              topLevelItem(i)->setBackground(2,brw);
+              topLevelItem(i)->setFont(0, base_font);
+              topLevelItem(i)->setFont(1, base_font);
+              topLevelItem(i)->setFont(2, base_font);
+              base_font.setBold(false);
+            }
         }
     }
 }
@@ -100,6 +132,7 @@ void MyTreeView::mark(bool m){
       marked = false;
       setStyleSheet(focused_list_style);
     }
+  updateSelection();
 }
 
 QWidget *MyTreeView::getContent(){

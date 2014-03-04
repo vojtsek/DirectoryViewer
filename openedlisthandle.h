@@ -74,6 +74,7 @@ public:
       }
     QObject::connect((T *)content, SIGNAL(rebuild()), this, SLOT(rebuildContent()));
     QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
+    QObject::connect((T *)content, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
     QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
   }
 

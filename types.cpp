@@ -96,8 +96,12 @@ void MTree::buildTree(std::string root, QTreeWidgetItem *it, bool top){
 void MIcon::rebuild(std::string path, std::string pattern){
   ((MyIconView *) content)->clear();
   osi->dirs.clear();
-  if(!osi->dirs.size())
-  osi->getDirInfo(path, pattern);
+  try{
+    osi->getDirInfo(path, pattern);
+  }catch(OSException *e){
+    std::cout << e->what() << std::endl;
+  }
+
   int w = ((MyIconView *)content)->w;
   int cols = w / col_width;
   ((MyIconView *)content)->setRowCount(osi->dirs.size() / cols + 1);
@@ -158,10 +162,14 @@ void MTree::rebuild(std::string p, std::string pat){
     osi->getDirInfo(p, pat);
   }catch(OSException *e){
     std::cout << e->what() << std::endl;
+    ((MyTreeView *)content)->stepup();
   }
   content->path = p;
   ((MyTreeView *)content)->clear();
   buildTree(p, nullptr, true);
+  ((MyTreeView*)content)->setEditTriggers(QTreeWidget::NoEditTriggers);
+  ((MyTreeView*)content)->setAlternatingRowColors(false);
+  ((MyTreeView*)content)->setSortingEnabled(false);
   ((MyTreeView*)content)->setSelectionBehavior(QTreeWidget::SelectRows);
   ((MyTreeView*)content)->setHeaderHidden(true);
   ((MyTreeView*)content)->setColumnWidth(0, 280);

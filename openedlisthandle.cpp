@@ -74,11 +74,8 @@ void OpenedListHandle::changeLayout(int type){
       break;
     case ICON:
       view = new MIcon(path, le2->text().toStdString());
-      //view->rebuild(path, le2->text().toStdString());
       content = view->content;
       h_layout2->addWidget((MyIconView *) content);
-      //((MyIconView *) content)->resizeColumnsToContents();
-      //view->rebuild(path, le2->text().toStdString());
       break;
     case VIEW:
       view = new MView(path);
@@ -170,7 +167,7 @@ void OpenedListHandle::setSelection(bool in){
 
 void OpenedListHandle::rebuildContent(){
   if(view_type == ICON)
-    view->rebuild(path, "*");
+    view->rebuild(path, le2->text().toStdString());
   tb2->setMaximumWidth(content->w);
 }
 

@@ -12,6 +12,7 @@ class MyTreeView : public QTreeWidget, public MyViewType
 public:
   explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType() {
     setSelectionBehavior(QAbstractItemView::SelectRows);
+    //QObject::connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(selchanged()));
   }
 //  MyTreeView(const MyTreeView&);
   virtual ~MyTreeView() {}
