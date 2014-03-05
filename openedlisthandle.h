@@ -37,7 +37,7 @@ class OpenedListHandle: public QWidget{
   Q_OBJECT
 public:
   std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
-  std::vector<AbstractView *> to_del;
+  std::vector<MyViewType *> to_del;
   QVBoxLayout *v_layout, *v_layout2;
   QHBoxLayout *h_layout1, *h_layout2;
   QGridLayout *g_layout;
@@ -46,7 +46,6 @@ public:
   QLineEdit *le2;
   QLabel *lbl, *lbl2, *lbl3;
   MyViewType *content;
-  AbstractView *view;
   QToolBar *tb, *tb2;
   bool in_layout;
   std::string path;
@@ -72,13 +71,13 @@ public:
       }else if(typeid(T) == typeid(MyIconView)){
         QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
       }
-    QObject::connect((T *)content, SIGNAL(rebuild()), this, SLOT(rebuildContent()));
+    QObject::connect((T *)content, SIGNAL(rebuilded()), this, SLOT(rebuildContent()));
     QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
     QObject::connect((T *)content, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
     QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
   }
 
-  void initLayout(std::string, AbstractView *tree = 0);
+  void initLayout(std::string);
   virtual ~OpenedListHandle();
 
 signals:

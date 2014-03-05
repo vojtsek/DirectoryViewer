@@ -50,10 +50,12 @@ typedef struct{
 class MyViewType{
 public:
   std::set<std::string> multi_selection;
-  bool is_focused, marked;
-  std::string path;
-  int w;
+  bool is_focused, marked, recursive;
+  std::string path, pattern;
+  OSInterface *osi;
+  int w, col_width;
   virtual std::string getSelected() = 0;
+  virtual void rebuild() = 0;
   virtual int getSelIdx() = 0;
   virtual void setFocus() = 0;
   virtual void unFocus() = 0;
@@ -61,51 +63,10 @@ public:
   virtual void mark(bool) = 0;
   virtual void die() = 0;
   virtual QWidget *getContent() = 0;
-  MyViewType(): is_focused(false), marked(false), path("") {}
+  MyViewType(std::string p, std::string pat): is_focused(false), marked(false), path(p), pattern(pat) {
+    osi = nullptr;
+  }
   virtual ~MyViewType() {}
 };
 
-class AbstractView{
-public:
-  MyViewType *content;
-  std::string path, pattern;
-  OSInterface *osi;
-  int col_width;
-  bool recursive;
-  AbstractView(std::string, std::string);
- // virtual AbstractView *clone() = 0;
-  virtual void rebuild(std::string, std::string) = 0;
-  //virtual void init(std::string, std::string, bool);
-  virtual ~AbstractView(){
-    delete content;
-  }
-};
-
-class MTree : public AbstractView{
-public:
-  void buildTree(std::string, QTreeWidgetItem *it, bool);
-  void init(std::string, std::string, bool);
-  //virtual AbstractView *clone();
-  virtual void rebuild(std::string, std::string);
-  MTree(std::string, std::string, bool);
-  virtual ~MTree() {}
-};
-
-class MIcon : public AbstractView{
-public:
-  void init(std::string, std::string);
-  //virtual AbstractView *clone();
-  virtual void rebuild(std::string, std::string);
-  MIcon(std::string, std::string);
-  virtual ~MIcon() {}
-};
-
-class MView : public AbstractView{
-public:
-  void init(std::string, std::string pat = "");
-  //virtual AbstractView *clone();
-  virtual void rebuild(std::string, std::string pat = "");
-  MView(std::string, std::string pat = "");
-  virtual ~MView() {}
-};
 #endif //TYPES_H

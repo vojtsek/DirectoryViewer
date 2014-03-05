@@ -1,5 +1,6 @@
 #include "mytreeview.h"
 #include "osinterface.h"
+#include "mydialog.h"
 #include "types.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
@@ -10,6 +11,7 @@
 #include <QBrush>
 #include <QStandardItem>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 int MyTreeView::getSelIdx(){
@@ -27,6 +29,89 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
   focus();
 }
 
+void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
+  OSInterface os;
+  try{
+    os.getDirInfo(root, pattern);
+  }catch(OSException *e){
+    std::cout << e->what() << std::endl;
+    return;
+  }
+  QIcon dir_icon("directory.png");
+  QIcon ar_icon("archive.png");
+  QIcon base_icon("file.png");
+  QFont base_font, bold_font, italic_font;
+  italic_font.setFamily("Verdana");
+  italic_font.setItalic(true);
+  bold_font.setBold(true);
+  bold_font.setFamily("Verdana");
+  base_font.setFamily("Verdana");
+  if(root[root.size() - 1] == OSInterface::dir_sep)
+    root = root.substr(0,root.size() - 1);
+  QTreeWidgetItem *item;
+  for(auto &e : os.dirs){
+      if(e->name.empty()) continue;
+      if((e->name == ".") || (e->name == "..")) continue;
+      std::stringstream ss;
+      if(it != nullptr)
+        item = new QTreeWidgetItem();
+      else
+        item = new QTreeWidgetItem(this);
+      item->setText(0, QString::fromStdString(e->name));
+      item->setIcon(0, base_icon);
+      if(e->type == e->DIR){
+          item->setIcon(0, dir_icon);
+          item->setFont(0, bold_font);
+      }else if(e->type == e->LINK){
+          item->setFont(0, italic_font);
+          item->setForeground(0, QBrush(QColor(255, 0, 0)));
+      }else if(e->type == e->ARCHIVE){
+          item->setIcon(0, ar_icon);
+          item->setFont(0, bold_font);
+          item->setForeground(0, QBrush(QColor(255, 0, 255)));
+      }else item->setFont(0, base_font);
+
+      item->setText(1, QString::fromStdString(e->type_name));
+      item->setFont(1, italic_font);
+      if(e->type == e->DIR) item->setFont(0, bold_font);
+      ss << e->byte_size;
+      item->setText(2, QString::fromStdString(ss.str()));
+      if(recursive && top){
+          if(e->type == e->DIR){
+              buildTree(root + OSInterface::dir_sep + e->name, item, false);
+            }
+        }
+      if(it != nullptr){
+          it->addChild(item);
+          it->setExpanded(false);
+        }
+    }
+}
+
+void MyTreeView::rebuild(){
+  if(osi == nullptr) osi = new OSInterface();
+  osi->dirs.clear();
+  try{
+    osi->getDirInfo(path, pattern);
+  }catch(OSException *e){
+    std::cout << e->what() << std::endl;
+    stepup();
+  }
+  clear();
+  buildTree(path, nullptr, true);
+  setEditTriggers(QTreeWidget::NoEditTriggers);
+  setAlternatingRowColors(false);
+  setSortingEnabled(false);
+  setSelectionBehavior(QTreeWidget::SelectRows);
+  setHeaderHidden(true);
+  setColumnWidth(0, 280);
+  if(!osi->dirs.empty()){
+      QPersistentModelIndex nextIndex = indexAt(QPoint(0, 0));
+      selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
+    }
+  repaint();
+}
+
 void MyTreeView::focusOutEvent(QFocusEvent *e){
   unFocus();
 }
@@ -35,7 +120,7 @@ void MyTreeView::resizeEvent(QResizeEvent *e)
 {
     w = e->size().width();
     if(w)
-      emit(rebuild());
+      emit(rebuilded());
 }
 
 void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
@@ -64,9 +149,14 @@ void MyTreeView::die(){
 void MyTreeView::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_Insert)
     mark(!marked);
-  else if(e->key() == Qt::Key_Shift)
-    changeSelection(getSelIdx());
-  else if(e->key() == Qt::Key_Backspace){
+  else if(e->key() == Qt::Key_Shift){
+      if(!recursive)
+        changeSelection(getSelIdx());
+      else{
+          std::string msg("Selecting items is not allowed in tree mode.");
+          MyDialog::MsgBox(msg);
+        }
+  }else if(e->key() == Qt::Key_Backspace){
       emit(stepup());
       setFocus();
     }else if(e->key() == Qt::Key_F1)

@@ -10,17 +10,24 @@ class MyTreeView : public QTreeWidget, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType() {
+  explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType("", "") {
     setSelectionBehavior(QAbstractItemView::SelectRows);
-    //QObject::connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(selchanged()));
+  }
+  MyTreeView(std::string pa, std::string pat, bool rec, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, pat) {
+    setColumnCount(3);
+    recursive = rec;
+    setSelectionBehavior(QAbstractItemView::SelectRows);
+    rebuild();
   }
 //  MyTreeView(const MyTreeView&);
   virtual ~MyTreeView() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
-  virtual void resizeEvent(QResizeEvent *e);
-  std::string getSelected();
+  virtual void resizeEvent(QResizeEvent *);
+  virtual void rebuild();
+  virtual std::string getSelected();
+  virtual int getSelIdx();
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
@@ -28,10 +35,10 @@ public:
   virtual QWidget *getContent();
   void changeSelection(int);
   void updateSelection();
-  virtual int getSelIdx();
+  void buildTree(std::string, QTreeWidgetItem *, bool top);
   virtual void die();
 signals:
-  void rebuild();
+  void rebuilded();
   void focused();
   void unfocused();
   void stepup();

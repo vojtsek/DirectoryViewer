@@ -85,9 +85,9 @@ void MainHandler::copy(){
   if(is_dst && is_src){
       emit(confirm1("Copy",cmd_info));
       src->content->multi_selection.clear();
-      src->view->rebuild(src->content->path, src->view->pattern);
+      src->content->rebuild();
       for(auto &a : opened_lists)
-        if(a->content->marked) a->view->rebuild(a->content->path, a->view->pattern);
+        if(a->content->marked) a->content->rebuild();
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -109,7 +109,7 @@ void MainHandler::remove() {
   if(is_src){
       emit(confirm2("Remove",cmd_info));
       src->content->multi_selection.clear();
-      src->view->rebuild(src->content->path, src->view->pattern);
+      src->content->rebuild();
     }else{
       std::string err("No source file selected.");
       emit(error(err));
@@ -132,9 +132,9 @@ void MainHandler::move() {
   if(is_dst && is_src){
       emit(confirm1("Move",cmd_info));
       src->content->multi_selection.clear();
-      src->view->rebuild(src->content->path, src->view->pattern);
+      src->content->rebuild();
       for(auto &a : opened_lists)
-        if(a->content->marked) a->view->rebuild(a->content->path, a->view->pattern);
+        if(a->content->marked) a->content->rebuild();
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -170,7 +170,7 @@ void MainHandler::rename() {
         }
       OSInterface::rename(cmd_info);
       src->content->multi_selection.clear();
-      src->view->rebuild(src->content->path, src->view->pattern);
+      src->content->rebuild();
     }else{
       std::string err("No selected source files.");
       emit(error(err));

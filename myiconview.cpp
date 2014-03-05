@@ -3,8 +3,10 @@
 #include "osinterface.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
+#include <QHeaderView>
 #include <QBrush>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 int MyIconView::getSelIdx(){
@@ -24,7 +26,7 @@ void MyIconView::resizeEvent(QResizeEvent *e)
 {
     w = e->size().width();
     if(w)
-      emit(rebuild());
+      emit(rebuilded());
 }
 
 void MyIconView::setFocus(){ QWidget::setFocus(); }
@@ -33,6 +35,66 @@ std::string MyIconView::getSelected(){
   if(currentItem())
     return path + OSInterface::dir_sep + currentItem()->text().toStdString() ;
   else return "";
+}
+
+void MyIconView::rebuild(){
+  clear();
+  if(osi == nullptr) osi = new OSInterface();
+  osi->dirs.clear();
+  try{
+    osi->getDirInfo(path, pattern);
+  }catch(OSException *e){
+    std::cout << e->what() << std::endl;
+  }
+
+  int cols = w / col_width;
+  setRowCount(osi->dirs.size() / cols + 1);
+  setColumnCount(cols);
+  setIconSize(QSize(25,25));
+  for(int i = 0; i < cols; ++i){
+      setColumnWidth(i, col_width - 1);
+    }
+  QTableWidgetItem *item;
+  QIcon dir_icon("directory.png");
+  QIcon arch_icon("archive.png");
+  QIcon base_icon("file.png");
+  QFont base_font, bold_font, italic_font;
+  italic_font.setFamily("Verdana");
+  italic_font.setItalic(true);
+  bold_font.setBold(true);
+  bold_font.setFamily("Verdana");
+  base_font.setFamily("Verdana");
+  int row = 0, col = 0;
+  if(path[path.size() - 1] == '/')
+    path = path.substr(0,path.size() - 1);
+  for(auto &e : osi->dirs){
+      if((e->name == ".") || (e->name == "..")) continue;
+      std::stringstream ss;
+      item = new QTableWidgetItem(QString::fromStdString(e->name));
+      item->setIcon(base_icon);
+      if(e->type == e->DIR){
+          item->setIcon(dir_icon);
+          item->setFont(bold_font);
+      }else if(e->type == e->LINK){
+          item->setFont(italic_font);
+          item->setForeground(QBrush(QColor(255, 0, 0)));
+      }else if(e->type == e->ARCHIVE){
+          item->setIcon(arch_icon);
+        item->setFont(bold_font);
+        item->setForeground(QBrush(QColor(255, 0, 255)));
+      }else item->setFont(base_font);
+      setItem(row, col, item);
+      col = (col + 1) % cols;
+      if(!col)
+        ++row;
+    }
+  horizontalHeader()->setVisible(false);
+  verticalHeader()->setVisible(false);
+  setShowGrid(false);
+  if(!osi->dirs.empty()){
+      QPersistentModelIndex nextIndex = indexAt(QPoint(0, 0));
+      selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
+    }
 }
 
 void MyIconView::updateSelection(){

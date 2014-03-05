@@ -9,12 +9,16 @@ class MyViewer : public QPlainTextEdit, public MyViewType
 {
   Q_OBJECT
 public:
-  MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType() {}
+  explicit MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType("","") {}
+  MyViewer(std::string pa, std::string pat, QWidget *p = 0): QPlainTextEdit(p), MyViewType(pa, pat) {
+    rebuild();
+  }
   virtual ~MyViewer() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   virtual void resizeEvent(QResizeEvent *e);
+  virtual void rebuild();
   std::string getSelected();
   virtual QWidget *getContent();
   virtual void unFocus();
@@ -25,7 +29,7 @@ public:
   virtual void die();
 signals:
   void focused();
-  void rebuild();
+  void rebuilded();
   void unfocused();
   void itemSelectionChanged();
   void stepup();

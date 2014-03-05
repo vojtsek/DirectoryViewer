@@ -48,10 +48,8 @@ void OpenedListHandle::clean(){
 
 void OpenedListHandle::changeLayout(int type){
   clean();
-  to_del.push_back(view);
+  to_del.push_back(content);
   content->die();
-  //((QWidget *) content)->setFixedSize(0, 0);
- // ((QWidget *) content)->setFocusPolicy(Qt::NoFocus);
   view_type = type;
   std::set<std::string> sel = content->multi_selection;
   bool was_focused = content->is_focused;
@@ -63,23 +61,19 @@ void OpenedListHandle::changeLayout(int type){
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
   switch (type) {
     case TREE:
-      view = new MTree(path, le2->text().toStdString(), true);
-      content = view->content;
+      content = new MyTreeView(path, le2->text().toStdString(), true);
       h_layout2->addWidget((MyTreeView *)content);
       break;
      case LIST:
-      view = new MTree(path, le2->text().toStdString(), false);
-      content = view->content;
+      content = new MyTreeView(path, le2->text().toStdString(), false);
       h_layout2->addWidget((MyTreeView *)content);
       break;
     case ICON:
-      view = new MIcon(path, le2->text().toStdString());
-      content = view->content;
+      content = new MyIconView(path, le2->text().toStdString());
       h_layout2->addWidget((MyIconView *) content);
       break;
     case VIEW:
-      view = new MView(path);
-      content = view->content;
+      content = new MyViewer(path, le2->text().toStdString());
       h_layout2->addWidget((MyViewer *)content);
       break;
     }
@@ -143,7 +137,8 @@ void OpenedListHandle::stepUp(){
 void OpenedListHandle::pathChanged(){
   if(OSInterface::isDir(le1->text().toStdString())){
       path = le1->text().toStdString();
-    view->rebuild(path, "*");
+      content->path = path;
+    content->rebuild();
     }
   if(view_type == VIEW) changeLayout(LIST);
 }
@@ -166,8 +161,9 @@ void OpenedListHandle::setSelection(bool in){
 }*/
 
 void OpenedListHandle::rebuildContent(){
-  if(view_type == ICON)
-    view->rebuild(path, le2->text().toStdString());
+  if(view_type == ICON){
+      content->rebuild();
+    }
   tb2->setMaximumWidth(content->w);
 }
 
@@ -223,7 +219,7 @@ void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
       if((chi == nullptr) || (chi->childCount())) continue;
       path = p + OSInterface::dir_sep + chi->text(0).toStdString();
       if(OSInterface::isDir(path))
-        ((MTree *)view)->buildTree(path, chi, false);
+        ((MyTreeView *) content)->buildTree(path, chi, false);
     }
 }
 
@@ -235,31 +231,34 @@ void OpenedListHandle::updateLbl(){
   lbl->setText(QString::fromStdString(ss.str()));
   ss.str("");
   ss.clear();
-  dirEntryT *t = view->osi->dirs[content->getSelIdx()];
-  ss << round((t->byte_size / pow(1024, size_in)));
-  switch(size_in){
-    case B:
-      ss << " B";
-      break;
-    case KB:
-      ss << " KB";
-      break;
-    case MB:
-      ss << " MB";
-      break;
-    case GB:
-      ss << " GB";
-      break;
+  if(view_type != TREE){
+      dirEntryT *t = content->osi->dirs[content->getSelIdx()];
+      if(t != nullptr)
+        ss << round((t->byte_size / pow(1024, size_in)));
+      switch(size_in){
+        case B:
+          ss << " B";
+          break;
+        case KB:
+          ss << " KB";
+          break;
+        case MB:
+          ss << " MB";
+          break;
+        case GB:
+          ss << " GB";
+          break;
+        }
+      lbl2->setText(QString::fromStdString(ss.str()));
+      ss.str("");
+      ss.clear();
+      ss << t->perms << " ";
+      ss << t->mod_time;
     }
-  lbl2->setText(QString::fromStdString(ss.str()));
-  ss.str("");
-  ss.clear();
-  ss << t->perms << " ";
-  ss << t->mod_time;
   lbl3->setText(QString::fromStdString(ss.str()));
 }
 
-void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
+void OpenedListHandle::initLayout(std::string p){
   v_layout = new QVBoxLayout();
   h_layout1 = new QHBoxLayout();
   h_layout2 = new QHBoxLayout();
@@ -282,11 +281,7 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   le2->setMaximumWidth(70);
   le2->setText("*");
   view_type = LIST;
-  if(!tree)
-     view = new MTree(p,le2->text().toStdString(), false);
-  else
-    view = tree;
-  content = view->content;
+  content = new MyTreeView(p, le2->text().toStdString(), false);
   tb = new QToolBar();
   lbl = new QLabel();
   lbl2 = new QLabel();
@@ -298,7 +293,6 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
   tb2->addWidget(lbl2);
   tb2->addSeparator();
   tb2->addWidget(lbl3);
-  //lbl->setStyleSheet(label_style);
   updateLbl();
   h_layout1->addWidget(le1);
   h_layout1->addWidget(le2);
@@ -312,7 +306,7 @@ void OpenedListHandle::initLayout(std::string p, AbstractView *tree){
     h_layout2->addWidget((MyTreeView *)content);
     }else if(view_type == ICON){
       connectSignals<MyIconView>();
-      h_layout2->addWidget((MyTreeView *)content);
+      h_layout2->addWidget((MyIconView *)content);
     }
   for(auto &a : tool_btts){
       a.second.btt->setMaximumWidth(150);
@@ -337,7 +331,6 @@ OpenedListHandle::OpenedListHandle(std::string p, unsigned int s, QWidget *paren
 void OpenedListHandle::delGraphics(){
   delete le1;
   delete le2;
-  delete view;
   delete up_btt->btt;
   for(auto &a : tool_btts){
       delete a.second.btt;
@@ -356,6 +349,7 @@ void OpenedListHandle::delGraphics(){
 
 OpenedListHandle::~OpenedListHandle(){
   clean();
+  delete content;
   delGraphics();
 }
 

@@ -8,6 +8,7 @@
 #include <QFocusEvent>
 #include <QTextEdit>
 #include <QBrush>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -38,6 +39,19 @@ void MyViewer::resizeEvent(QResizeEvent *e)
 }
 
 void MyViewer::setFocus(){ QWidget::setFocus(); }
+
+void MyViewer::rebuild(){
+  std::ifstream in(path);
+  std::string line;
+  setReadOnly(true);
+  while(in.good()){
+      getline(in, line);
+      appendPlainText(QString::fromStdString(line));
+    }
+  QTextCursor cursor(textCursor());
+  cursor.movePosition(QTextCursor::Start);
+  setTextCursor(cursor);
+}
 
 std::string MyViewer::getSelected(){
   return "";
