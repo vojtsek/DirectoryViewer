@@ -4,6 +4,7 @@
 #include "mylineedit.h"
 #include "myiconview.h"
 #include "mytreeview.h"
+#include "archiveviewer.h"
 #include "myviewer.h"
 #include "osinterface.h"
 #include "stylesheets.h"
@@ -60,21 +61,25 @@ void OpenedListHandle::changeLayout(int type){
   if((view_type == TREE) || (view_type == LIST))
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
   switch (type) {
-    case TREE:
+  case TREE:
       content = new MyTreeView(path, le2->text().toStdString(), true);
       h_layout2->addWidget((MyTreeView *)content);
       break;
-     case LIST:
+  case LIST:
       content = new MyTreeView(path, le2->text().toStdString(), false);
       h_layout2->addWidget((MyTreeView *)content);
       break;
-    case ICON:
+  case ICON:
       content = new MyIconView(path, le2->text().toStdString());
       h_layout2->addWidget((MyIconView *) content);
       break;
-    case VIEW:
+  case VIEW:
       content = new MyViewer(path, le2->text().toStdString());
       h_layout2->addWidget((MyViewer *)content);
+      break;
+  case ARCHIVE:
+      content = new ArchiveViewer(path);
+      h_layout2->addWidget((ArchiveViewer *)content);
       break;
     }
   highlightBtt();
@@ -91,6 +96,8 @@ void OpenedListHandle::changeLayout(int type){
     connectSignals<MyIconView>();
   else if (view_type == VIEW)
     connectSignals<MyViewer>();
+  else if (view_type == ARCHIVE)
+    connectSignals<ArchiveViewer>();
   emit(updated());
   h_layout2->update();
 
@@ -177,7 +184,12 @@ void OpenedListHandle::processItem(std::string new_path){
       path = new_path;
       changeLayout(VIEW);
       path = old;
-    }
+    }else if(isArch(new_path)){
+      std::string old = path;
+      path = new_path;
+      changeLayout(ARCHIVE);
+      path = old;
+  }
 }
 
 void OpenedListHandle::itemActivated(QTableWidgetItem *item){
@@ -231,7 +243,7 @@ void OpenedListHandle::updateLbl(){
   lbl->setText(QString::fromStdString(ss.str()));
   ss.str("");
   ss.clear();
-  if(view_type != TREE){
+  if((view_type == LIST) || ( view_type == ICON)){
       dirEntryT *t = content->osi->dirs[content->getSelIdx()];
       if(t != nullptr)
         ss << round((t->byte_size / pow(1024, size_in)));

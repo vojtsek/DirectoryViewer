@@ -209,6 +209,7 @@ long long OSInterface::getSize(std::string p){
 }
 
 bool OSInterface::isOpenable(std::string path){
+    if(isArch(path)) return false;
   if (getSize(path) > pow(1024, 2)){
       std::string warn = "File is quite large. Proceed with opening?";
       if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
@@ -258,7 +259,7 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
           de->type = de->UNKNOWN;
           de->type_name = "UNKNOWN";
         }
-      if(isArch(de->ext_name)){
+      if(isArch(de->name)){
           de->type_name = "ARCHIVE";
           de->type = de->ARCHIVE;
         }

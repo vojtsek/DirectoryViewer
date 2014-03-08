@@ -39,6 +39,7 @@ std::string getExtension(std::string &path){
   return path.substr(pos + 1, path.size());
 }
 
-bool isArch(std::string &ext){
+bool isArch(std::string &path){
+    std::string ext(getExtension(path));
   return ((ext == "gz") || (ext == "bz2") || (ext == "zip") || (ext == "rar"));
 }

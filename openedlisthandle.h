@@ -49,7 +49,7 @@ public:
   QToolBar *tb, *tb2;
   bool in_layout;
   std::string path;
-  enum {TREE, LIST, ICON, VIEW};
+  enum {TREE, LIST, ICON, VIEW, ARCHIVE};
   int view_type;
   unsigned int size_in;
   enum {B, KB, MB, GB};

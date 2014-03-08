@@ -189,7 +189,7 @@ void MainHandler::view() {
 
 void MainHandler::list_added(){
   if(opened_lists.size() < max_lists){
-    opened_lists.push_back(new OpenedListHandle(OSInterface::getCWD(), size_in));
+    opened_lists.push_back(new OpenedListHandle(init_dir, size_in));
     emit(ch_list(false));
   }
 }
