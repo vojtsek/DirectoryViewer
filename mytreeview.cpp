@@ -1,6 +1,7 @@
 #include "mytreeview.h"
 #include "osinterface.h"
 #include "mydialog.h"
+#include "functions.h"
 #include "types.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
@@ -126,9 +127,10 @@ void MyTreeView::resizeEvent(QResizeEvent *e)
 void MyTreeView::setFocus(){ QTreeWidget::setFocus(); }
 
 std::string MyTreeView::getSelected(){
-  if(currentItem())
-  return path + OSInterface::dir_sep + currentItem()->text(0).toStdString() ;
-  else return "";
+    repairPath(path);
+        if(currentItem())
+            return path + currentItem()->text(0).toStdString() ;
+        else return "";
 }
 
 void MyTreeView::changeSelection(int idx){
@@ -183,9 +185,10 @@ void MyTreeView::updateSelection(){
   sel_font.setFamily("Helvetica");
   sel_font.setUnderline(true);
   sel_font.setLetterSpacing(QFont::AbsoluteSpacing, 2);
+  repairPath(path);
   for(int i = 0; i < topLevelItemCount(); ++i){
       if(topLevelItem(i) != nullptr){
-          if(multi_selection.find(path + OSInterface::dir_sep + topLevelItem(i)->text(0).toStdString()) != multi_selection.end()){
+          if(multi_selection.find(path + topLevelItem(i)->text(0).toStdString()) != multi_selection.end()){
               topLevelItem(i)->setBackground(0,brb);
               topLevelItem(i)->setFont(0, sel_font);
               topLevelItem(i)->setBackground(1,brb);

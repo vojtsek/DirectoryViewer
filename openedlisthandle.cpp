@@ -125,8 +125,9 @@ void OpenedListHandle::stepUp(){
   int it;
   std::string cont = le1->text().toStdString();
   if(cont == OSInterface::getPrefix()) return;
-  if((it = cont.find_last_of(OSInterface::dir_sep)) == -1) return;
-  cont = cont.substr(0, it);
+  cont = cont.substr(0, cont.size() - 1);
+  if((it = cont.find_last_of(OSInterface::dir_sep)) == std::string::npos) return;
+  cont = cont.substr(0, it + 1);
   if(!cont.empty())
     le1->setText(QString::fromStdString(cont));
   else
@@ -148,8 +149,8 @@ void OpenedListHandle::setSelection(bool in){
       int it;
       std::string cont = le1->text().toStdString();
       if(cont == OSInterface::getPrefix()) return;
-      if((it = cont.find_last_of(OSInterface::dir_sep)) == -1) return;
-      le1->setSelection(it,cont.size()-it);
+      if((it = cont.find_last_of(OSInterface::dir_sep)) == std::string::npos) return;
+      le1->setSelection(it + 1,cont.size() - it );
     }else{
       le1->setText(QString::fromStdString(path));
     }
@@ -169,8 +170,15 @@ void OpenedListHandle::rebuildContent(){
 
 void OpenedListHandle::processItem(std::string new_path){
   if(OSInterface::isDir(new_path)){
-      if(le1->text().toStdString() == OSInterface::getPrefix())
-        new_path = new_path.substr(1, new_path.size());
+      if(le1->text().toStdString() == OSInterface::getPrefix()){
+          int pos;
+          std::string doubled;
+          doubled.push_back(OSInterface::dir_sep);
+          doubled.push_back(OSInterface::dir_sep);
+          while((pos = new_path.find(doubled)) != std::string::npos){
+              new_path = new_path.substr(0, pos) + new_path.substr(pos + 1, new_path.size());
+          }
+      }
       le1->setText(QString::fromStdString(new_path)); //signal
     }else if(OSInterface::isOpenable(new_path)){
       std::string old = path;

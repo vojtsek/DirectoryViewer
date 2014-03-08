@@ -21,13 +21,15 @@ void MyLineEdit::keyPressEvent(QKeyEvent *e){
   if((selectedText().toStdString() == sep) && text().toStdString() == sep) return;
   std::string cont = text().toStdString();
   char key = (char) e->key();
-  if((cont[cont.size()-1] == OSInterface::dir_sep) && (key == OSInterface::dir_sep)) return;
-  QLineEdit::keyPressEvent(e);
+  if((cont[cont.size() - 1] == OSInterface::dir_sep) && (key == OSInterface::dir_sep)) return;
   if(e->key() == Qt::Key_Backspace){
-    if(text().toStdString().empty())
+    if(text().toStdString() == OSInterface::getPrefix())
       setText(QString::fromStdString(OSInterface::getPrefix()));
+    else
+        QLineEdit::keyPressEvent(e);
     emit(focused(true));
-    }
+    }else
+      QLineEdit::keyPressEvent(e);
 }
 
 void MyLineEdit::mousePressEvent(QMouseEvent *e){

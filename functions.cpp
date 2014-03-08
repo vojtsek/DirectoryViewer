@@ -2,6 +2,11 @@
 #include "osinterface.h"
 #include <string>
 
+void repairPath(std::string &path){
+    if(path[path.size() - 1] != OSInterface::dir_sep)
+        path.push_back(OSInterface::dir_sep);
+}
+
 bool matchExpression(std::string &expr, std::string &pattern){
 
   int pos = pattern.find('*');
