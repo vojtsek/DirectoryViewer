@@ -31,7 +31,7 @@ public slots:
   void remove();
   void move();
   void rename();
-  void view();
+  void create();
   void list_added();
   void list_removed();
 };

@@ -32,6 +32,7 @@ public:
   static void copy(cmd_info_T &);
   static void move(cmd_info_T &);
   static void remove(cmd_info_T &);
+  static void create(std::string);
   static void rename(cmd_info_T &);
   static void doCopy(std::string &, std::string &);
   static void doMove(std::string &, std::string &);

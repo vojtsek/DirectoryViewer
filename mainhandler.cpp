@@ -160,8 +160,9 @@ void MainHandler::rename() {
           txt.append(QString::fromStdString(getBasename(file)));
           std::string str = cmd_info.src_path;
           str.push_back(OSInterface::dir_sep);
-          str.append(QInputDialog::getText(nullptr, lbl, txt).toStdString());
-          if(str.empty()){
+          std::string name = QInputDialog::getText(nullptr, lbl, txt).toStdString();
+          str.append(name);
+          if(name.empty()){
               std::string err("Empty names not allowed.");
               emit(error(err));
               break;
@@ -177,13 +178,21 @@ void MainHandler::rename() {
     }
 }
 
-void MainHandler::view() {
-  cmd_info_T cmd_info;
-  bool is_dst, is_src;
-  OpenedListHandle *src;
-  prepare_cmd(cmd_info, is_src, is_dst, false, src);
-  if(is_src){
-      emit(confirm2("View???",cmd_info));
+void MainHandler::create() {
+    for(auto &a : opened_lists){
+        if(a->content->is_focused){
+            QString lbl("Enter new name:");
+            QString txt("Name of new folder:\n");
+            std::string name = QInputDialog::getText(nullptr, lbl, txt).toStdString();
+            if(name.empty()){
+                std::string err("Empty names not allowed.");
+                emit(error(err));
+                break;
+              }
+            repairPath(a->content->path);
+            OSInterface::create(a->content->path + name);
+            a->content->rebuild();
+        }
     }
 }
 

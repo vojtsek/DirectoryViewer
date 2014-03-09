@@ -163,6 +163,11 @@ std::string OSInterface::getCWD(){
   return std::string(buf);
 }
 
+void OSInterface::create(std::string path){
+    if(mkdir(path.c_str(), 0755) == -1)
+      throw new OSException(path, strerror(errno));
+}
+
 
 void OSInterface::doMove(std::string &src, std::string &dst){
   std::stringstream ss;

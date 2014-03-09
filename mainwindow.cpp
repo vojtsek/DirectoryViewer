@@ -109,7 +109,7 @@ void MainWindow::prepareLayout(){
 
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F2, ButtonHandle<MainHandler>(Qt::Key_F2, "F2 Add List", &MainHandler::list_added)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F3, ButtonHandle<MainHandler>(Qt::Key_F3, "F3 Remove List", &MainHandler::list_removed)));
-  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F4, ButtonHandle<MainHandler>(Qt::Key_F4, "F4 View", &MainHandler::view)));
+  handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F4, ButtonHandle<MainHandler>(Qt::Key_F4, "F4 Create Folder", &MainHandler::create)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F5, ButtonHandle<MainHandler>(Qt::Key_F5, "F5 Copy", &MainHandler::copy)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F6, ButtonHandle<MainHandler>(Qt::Key_F6, "F6 Move", &MainHandler::move)));
   handler->tool_btts.insert(std::pair<Qt::Key, ButtonHandle<MainHandler>>(Qt::Key_F7, ButtonHandle<MainHandler>(Qt::Key_F7, "F7 Rename", &MainHandler::rename)));
