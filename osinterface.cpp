@@ -4,8 +4,20 @@
 
 #include <algorithm>
 #include <QMessageBox>
+#include <unistd.h>
 #include <sstream>
 #include <fstream>
+
+#ifdef __unix__
+
+#include <dirent.h>
+#include <iostream>
+#include <unistd.h>
+#include <time.h>
+#include <cstring>
+#include <sys/stat.h>
+
+#endif
 
 #define BUFSIZE 4096 //size of copy buffer
 
@@ -145,13 +157,6 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
 
 #ifdef __unix__
 
-#include <dirent.h>
-#include <iostream>
-#include <unistd.h>
-#include <time.h>
-#include <cstring>
-#include <sys/stat.h>
-
 std::string OSInterface::getCWD(){
   char buf[255];
   getcwd(buf, 255);
@@ -212,20 +217,10 @@ void OSInterface::doRemove(std::string &src){
 
 std::string OSInterface::getPrefix(){ return "/"; }
 
-long long OSInterface::getSize(std::string p){
+std::size_t OSInterface::getSize(std::string p){
   struct stat *finfo = new struct stat();
   lstat(p.c_str(), finfo);
   return finfo->st_size;
-}
-
-bool OSInterface::isOpenable(std::string path){
-    if(isArch(path)) return false;
-  if (getSize(path) > pow(1024, 2)){
-      std::string warn = "File is quite large. Proceed with opening?";
-      if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-        return false;
-    }
-  return true;
 }
 
 bool OSInterface::isDir(std::string path){

@@ -41,7 +41,8 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
   bold_font.setBold(true);
   bold_font.setFamily("Verdana");
   base_font.setFamily("Verdana");
-  std::string name, prefix;
+  std::string name, prefix, tmp;
+  char last;
   int pos;
   try{
       prefix = name = items.at(idx);
@@ -52,7 +53,8 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
         item = new QTreeWidgetItem();
       else
         item = new QTreeWidgetItem(this);
-      name = name.substr(0, name.size() - 1);
+      if(name[name.size() - 1] == '/')
+          name = name.substr(0, name.size() - 1);
       pos = name.find_last_of('/');
       if(pos != std::string::npos)
           name = name.substr(pos + 1, name.size());
@@ -64,9 +66,11 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
               name = items.at(idx);
           }catch(std::exception e) { break; }
           if(name.find(prefix) != 0) break;
-          name = name.substr(prefix.size(), name.size() - prefix.size() - 1);
-          std::cout << name << std::endl;
+          last = name[name.size() - 1];
+          if(name != prefix)
+              name = name.substr(prefix.size(), name.size() - prefix.size() - 1);
           if(name.find('/') != std::string::npos) continue;
+          name.push_back(last);
           buildTree(item, idx);
       }
       if(it != nullptr){

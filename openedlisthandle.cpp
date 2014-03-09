@@ -187,7 +187,7 @@ void OpenedListHandle::processItem(std::string new_path){
           }
       }
       le1->setText(QString::fromStdString(new_path)); //signal
-    }else if(OSInterface::isOpenable(new_path)){
+    }else if((OSInterface::isOpenable(new_path) && (!isArch(new_path)))){
       std::string old = path;
       path = new_path;
       changeLayout(VIEW);
