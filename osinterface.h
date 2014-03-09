@@ -8,7 +8,6 @@
 #include <string>
 #include <QDate>
 
-#ifdef __unix__
 typedef struct {
   std::string name, type_name, ext_name, mod_time, perms;
   int type;
@@ -17,14 +16,16 @@ typedef struct {
   long long show_size;
 } dirEntryT;
 
-#endif
-
 class OSInterface
 {
 public:
   std::vector<dirEntryT*> dirs;
 #ifdef __unix__
   static const char dir_sep = '/';
+#endif
+
+#ifdef __WIN32__
+  static const char dir_sep = '\\';
 #endif
   OSInterface();
   void getDirInfo(std::string, std::string);
@@ -40,7 +41,7 @@ public:
   static std::string getCWD();
   static std::string getPrefix();
   static bool isDir(std::string);
-  static long long getSize(std::string);
+  static std::size_t getSize(std::string);
   static bool isOpenable(std::string);
 };
 

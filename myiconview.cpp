@@ -1,5 +1,6 @@
 #include "myiconview.h"
 #include "types.h"
+#include "functions.h"
 #include "osinterface.h"
 #include "stylesheets.h"
 #include <QKeyEvent>
@@ -32,8 +33,9 @@ void MyIconView::resizeEvent(QResizeEvent *e)
 void MyIconView::setFocus(){ QWidget::setFocus(); }
 
 std::string MyIconView::getSelected(){
+  repairPath(path);
   if(currentItem())
-    return path + OSInterface::dir_sep + currentItem()->text().toStdString() ;
+    return path + currentItem()->text().toStdString() ;
   else return "";
 }
 
@@ -109,10 +111,11 @@ void MyIconView::updateSelection(){
   sel_font.setFamily("Helvetica");
   sel_font.setUnderline(true);
   sel_font.setLetterSpacing(QFont::AbsoluteSpacing, 2);
+  repairPath(path);
   for(int i = 0; i < rowCount(); ++i){
       for(int j = 0; j < columnCount(); ++j){
           if(item(i, j) != nullptr){
-              if(multi_selection.find(path + OSInterface::dir_sep + item(i, j)->text().toStdString()) != multi_selection.end()){
+              if(multi_selection.find(path + item(i, j)->text().toStdString()) != multi_selection.end()){
                   item(i, j)->setBackground(brb);
                   item(i, j)->setFont(sel_font);
                 }else{

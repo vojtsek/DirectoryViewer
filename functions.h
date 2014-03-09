@@ -3,6 +3,7 @@
 
 #include <string>
 
+void repairPath(std::string &);
 bool matchExpression(std::string &, std::string &);
 std::string getBasename(std::string &);
 std::string getPath(std::string &);

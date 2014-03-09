@@ -19,6 +19,7 @@ public:
       setSelectionMode( QAbstractItemView::SingleSelection );
       setEditTriggers(QAbstractItemView::EditTriggers(0));
       w = width();
+      col_width = 80;
     }
  // MyTreeView(const MyTreeView&);
   virtual ~MyIconView() {}
