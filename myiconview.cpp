@@ -52,14 +52,14 @@ void MyIconView::rebuild(){
   int cols = w / col_width;
   setRowCount(osi->dirs.size() / cols + 1);
   setColumnCount(cols);
-  setIconSize(QSize(25,25));
+  setIconSize(QSize(28,28));
   for(int i = 0; i < cols; ++i){
       setColumnWidth(i, col_width - 1);
     }
   QTableWidgetItem *item;
-  QIcon dir_icon("directory.png");
-  QIcon arch_icon("archive.png");
-  QIcon base_icon("file.png");
+  QIcon dir_icon("icons/folder-open-blue.png");
+  QIcon ar_icon("icons/database.png");
+  QIcon base_icon("icons/doc-plain-blue.png");
   QFont base_font, bold_font, italic_font;
   italic_font.setFamily("Verdana");
   italic_font.setItalic(true);
@@ -81,7 +81,7 @@ void MyIconView::rebuild(){
           item->setFont(italic_font);
           item->setForeground(QBrush(QColor(255, 0, 0)));
       }else if(e->type == e->ARCHIVE){
-          item->setIcon(arch_icon);
+          item->setIcon(ar_icon);
         item->setFont(bold_font);
         item->setForeground(QBrush(QColor(255, 0, 255)));
       }else item->setFont(base_font);

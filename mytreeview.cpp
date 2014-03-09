@@ -38,9 +38,9 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
     std::cout << e->what() << std::endl;
     return;
   }
-  QIcon dir_icon("directory.png");
-  QIcon ar_icon("archive.png");
-  QIcon base_icon("file.png");
+  QIcon dir_icon("icons/folder-open-blue.png");
+  QIcon ar_icon("icons/database.png");
+  QIcon base_icon("icons/doc-plain-blue.png");
   QFont base_font, bold_font, italic_font;
   italic_font.setFamily("Verdana");
   italic_font.setItalic(true);
