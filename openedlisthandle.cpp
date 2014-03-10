@@ -16,9 +16,12 @@
 #include <QComboBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <unistd.h>
+#include <wait.h>
 #include <QLineEdit>
 #include <QKeyEvent>
 #include <QToolBar>
+#include <QMessageBox>
 #include <QModelIndex>
 #include <QThread>
 #include <QObject>
@@ -62,23 +65,23 @@ void OpenedListHandle::changeLayout(int type){
     QObject::disconnect((MyTreeView *)content, 0, this, 0);
   switch (type) {
   case TREE:
-      content = new MyTreeView(path, le2->text().toStdString(), true);
+      content = new MyTreeView(path, le2->text().toStdString(), true, content->getSelIdx());
       h_layout2->addWidget((MyTreeView *)content);
       break;
   case LIST:
-      content = new MyTreeView(path, le2->text().toStdString(), false);
+      content = new MyTreeView(path, le2->text().toStdString(), false, content->getSelIdx());
       h_layout2->addWidget((MyTreeView *)content);
       break;
   case ICON:
-      content = new MyIconView(path, le2->text().toStdString());
+      content = new MyIconView(path, le2->text().toStdString(), content->getSelIdx());
       h_layout2->addWidget((MyIconView *) content);
       break;
   case VIEW:
-      content = new MyViewer(path, le2->text().toStdString());
+      content = new MyViewer(path, le2->text().toStdString(), content->getSelIdx());
       h_layout2->addWidget((MyViewer *)content);
       break;
   case ARCHIVE:
-      content = new ArchiveViewer(path);
+      content = new ArchiveViewer(path, content->getSelIdx());
       h_layout2->addWidget((ArchiveViewer *)content);
       break;
     }
@@ -170,7 +173,7 @@ void OpenedListHandle::setSelection(bool in){
 
 void OpenedListHandle::rebuildContent(){
   if(view_type == ICON){
-      content->rebuild();
+      content->rebuild(content->getSelIdx());
     }
   tb2->setMaximumWidth(content->w);
 }
@@ -187,12 +190,34 @@ void OpenedListHandle::processItem(std::string new_path){
           }
       }
       le1->setText(QString::fromStdString(new_path)); //signal
+  }else if(getExtension(new_path) == "pdf"){
+      pid_t pid;
+      switch(pid = fork()){
+      default:
+          childs.push_back(pid);
+          break;
+      case 0:
+          std::string cmd("/bin/mupdf");
+          execl(cmd.c_str(), getBasename(cmd).c_str(), new_path.c_str());
+          break;
+      }
+  }else if(getExtension(new_path) == "avi"){
+    pid_t pid;
+    switch(pid = fork()){
+    default:
+        childs.push_back(pid);
+        break;
+    case 0:
+        std::string cmd("/bin/vlc");
+        execl(cmd.c_str(), getBasename(cmd).c_str(), new_path.c_str());
+        break;
+    }
     }else if((OSInterface::isOpenable(new_path) && (!isArch(new_path)))){
       std::string old = path;
       path = new_path;
       changeLayout(VIEW);
       path = old;
-    }else if(isArch(new_path)){
+  }else if(isArch(new_path)){
       std::string old = path;
       path = new_path;
       changeLayout(ARCHIVE);
@@ -369,6 +394,22 @@ void OpenedListHandle::delGraphics(){
 
 OpenedListHandle::~OpenedListHandle(){
   clean();
+  int status;
+  if(childs.size()){
+      QMessageBox msg_box;
+      msg_box.setWindowTitle("Error!");
+      msg_box.setText("Please close child windows.");
+      msg_box.setStandardButtons(QMessageBox::Ok);
+      msg_box.setDefaultButton(QMessageBox::Ok);
+      msg_box.exec();
+      wait(&status);
+      msg_box.close();
+  }
+
+  for(auto &a: childs){
+      wait(&status);
+  }
+
   delete content;
   delGraphics();
 }

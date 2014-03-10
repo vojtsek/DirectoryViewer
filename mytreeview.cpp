@@ -23,7 +23,7 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
   emit(focused());
   if(model()){
       if(selectedIndexes().empty()){
-          QPersistentModelIndex sel_idx = indexAt(QPoint(0, 0));
+          QPersistentModelIndex sel_idx = indexAt(QPoint(4, 0));
           setCurrentIndex(sel_idx);
         }
     }
@@ -89,7 +89,7 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
     }
 }
 
-void MyTreeView::rebuild(){
+void MyTreeView::rebuild(int idx){
   if(osi == nullptr) osi = new OSInterface();
   osi->dirs.clear();
   try{
@@ -107,10 +107,10 @@ void MyTreeView::rebuild(){
   setHeaderHidden(true);
   setColumnWidth(0, 280);
   if(!osi->dirs.empty()){
-      QPersistentModelIndex nextIndex = indexAt(QPoint(0, 0));
+      QPersistentModelIndex nextIndex = model()->index(idx,0);
       selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
+      selectionModel()->select(nextIndex, QItemSelectionModel::ClearAndSelect);
     }
-  repaint();
 }
 
 void MyTreeView::focusOutEvent(QFocusEvent *e){
@@ -149,27 +149,39 @@ void MyTreeView::die(){
 }
 
 void MyTreeView::keyPressEvent(QKeyEvent *e){
-  if(e->key() == Qt::Key_Insert)
-    mark(!marked);
-  else if(e->key() == Qt::Key_Shift){
-      if(!recursive)
-        changeSelection(getSelIdx());
-      else{
-          std::string msg("Selecting items is not allowed in tree mode.");
-          MyDialog::MsgBox(msg);
+    switch (e->key()) {
+    case Qt::Key_Escape:
+        multi_selection.clear();
+        updateSelection();
+        break;
+    case Qt::Key_Insert:
+        mark(!marked);
+        break;
+    case Qt::Key_Shift:
+        if(!recursive)
+          changeSelection(getSelIdx());
+        else{
+            std::string msg("Selecting items is not allowed in tree mode.");
+            MyDialog::MsgBox(msg);
         }
-  }else if(e->key() == Qt::Key_Backspace){
-      emit(stepup());
-      setFocus();
-    }else if(e->key() == Qt::Key_F1)
-      emit(chlayout());
-  else if((e->key() == Qt::Key_Down) || (e->key() == Qt::Key_Up)){
-      QTreeWidget::keyPressEvent(e);
-      if(e->modifiers() & Qt::ShiftModifier)
-        changeSelection(getSelIdx());
+        break;
+    case Qt::Key_Backspace:
+        emit(stepup());
+        setFocus();
+        break;
+    case Qt::Key_F1:
+        emit(chlayout());
+        break;
+    case Qt::Key_Down:
+    case Qt::Key_Up:
+        QTreeWidget::keyPressEvent(e);
+        if(e->modifiers() & Qt::ShiftModifier)
+          changeSelection(getSelIdx());
+        break;
+    default:
+        QTreeWidget::keyPressEvent(e);
+        break;
     }
-    else
-    QTreeWidget::keyPressEvent(e);
 }
 
 void MyTreeView::updateSelection(){

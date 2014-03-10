@@ -13,7 +13,7 @@
 #include <string>
 
 int MyViewer::getSelIdx(){
-  return 0;
+  return idx;
 }
 
 void MyViewer::die(){
@@ -40,7 +40,11 @@ void MyViewer::resizeEvent(QResizeEvent *e)
 
 void MyViewer::setFocus(){ QWidget::setFocus(); }
 
-void MyViewer::rebuild(){
+void MyViewer::rebuild(int idx){
+    if(image){
+        setStyleSheet(QString::fromStdString("QPlainTextEdit {background: #000 url(" + path + ") no-repeat center; }"));
+        return;
+    }
   std::ifstream in(path);
   std::string line;
   setReadOnly(true);
@@ -56,31 +60,6 @@ void MyViewer::rebuild(){
 std::string MyViewer::getSelected(){
   return "";
 }
-/*
-void MyViewer::updateSelection(){
-  /*QBrush brb(QColor(150, 200, 255));
-  for(int i = 0; i < rowCount(); ++i){
-      for(int j = 0; j < columnCount(); ++j){
-          if(item(i, j) != nullptr){
-            if(multi_selection.find(path + "/" + item(i, j)->text().toStdString()) != multi_selection.end())
-              item(i, j)->setBackground(brb);
-            }
-        }
-    }
-}
-
-void MyViewer::changeSelection(){
-  QBrush brb(QColor(150, 200, 255)), brw(Qt::white);
-  std::string selected = getSelected();
-  if(multi_selection.find(selected) != multi_selection.end()){
-    multi_selection.erase(selected);
-    //currentItem()->setBackground(brw);
-  }else{
-    multi_selection.insert(selected);
-    //currentItem()->setBackground(brb);
-    }
-}
-*/
 
 void MyViewer::keyPressEvent(QKeyEvent *e){
   if(e->key() == Qt::Key_M)
@@ -98,8 +77,9 @@ void MyViewer::keyPressEvent(QKeyEvent *e){
 
 void MyViewer::focus(){
   is_focused = true;
-  setStyleSheet(focused_list_style);
-  //updateSelection();
+  //setStyleSheet(focused_list_style);
+  if(image)
+      setStyleSheet(QString::fromStdString("QPlainTextEdit {background: #000 url(" + path + ") no-repeat center; }"));
 }
 
 void MyViewer::mark(bool m){
@@ -116,7 +96,6 @@ void MyViewer::unFocus(){
   is_focused = false;
   if(!marked){
     setStyleSheet(unfocused_list_style);
-   // updateSelection();
   }else mark(true);
 }
 

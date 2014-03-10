@@ -39,7 +39,7 @@ std::string MyIconView::getSelected(){
   else return "";
 }
 
-void MyIconView::rebuild(){
+void MyIconView::rebuild(int idx){
   clear();
   if(osi == nullptr) osi = new OSInterface();
   osi->dirs.clear();
@@ -146,23 +146,39 @@ void MyIconView::die(){
 }
 
 void MyIconView::keyPressEvent(QKeyEvent *e){
-  if(e->key() == Qt::Key_Insert)
-    mark(!marked);
-  else if(e->key() == Qt::Key_Shift)
-    changeSelection();
-  else if(e->key() == Qt::Key_Backspace){
-      emit(stepup());
-      setFocus();
-    }else if(e->key() == Qt::Key_F1)
-    emit(chlayout());
-  else if(e->key() == Qt::Key_Tab){
-      QWidget::keyPressEvent(e);
-  }else if((e->key() == Qt::Key_Down) || (e->key() == Qt::Key_Up) || (e->key() == Qt::Key_Right) || (e->key() == Qt::Key_Left)){
-      QTableWidget::keyPressEvent(e);
-      if(e->modifiers() & Qt::ShiftModifier)
+    switch (e->key()) {
+    case Qt::Key_Escape:
+        multi_selection.clear();
+        updateSelection();
+        break;
+    case Qt::Key_Insert:
+        mark(!marked);
+        break;
+    case Qt::Key_Shift:
         changeSelection();
-    }else
-    QTableWidget::keyPressEvent(e);
+        break;
+    case Qt::Key_Backspace:
+        emit(stepup());
+        setFocus();
+        break;
+    case Qt::Key_F1:
+        emit(chlayout());
+        break;
+    case Qt::Key_Down:
+    case Qt::Key_Up:
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+        QTableWidget::keyPressEvent(e);
+        if(e->modifiers() & Qt::ShiftModifier)
+          changeSelection();
+        break;
+    case Qt::Key_Tab:
+        QWidget::keyPressEvent(e);
+        break;
+    default:
+        QTableWidget::keyPressEvent(e);
+        break;
+    }
 }
 
 void MyIconView::focus(){

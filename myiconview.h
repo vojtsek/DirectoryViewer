@@ -14,12 +14,13 @@ public:
     setEditTriggers(QAbstractItemView::EditTriggers(0));
     w = width();
   }
-  MyIconView(std::string pa, std::string pat, QWidget *p = 0): QTableWidget(p), MyViewType(pa, pat) {
+  MyIconView(std::string pa, std::string pat, int idx = 0, QWidget *p = 0): QTableWidget(p), MyViewType(pa, pat) {
       setSelectionBehavior( QAbstractItemView::SelectItems );
       setSelectionMode( QAbstractItemView::SingleSelection );
       setEditTriggers(QAbstractItemView::EditTriggers(0));
       w = width();
       col_width = 80;
+      rebuild(idx);
     }
  // MyTreeView(const MyTreeView&);
   virtual ~MyIconView() {}
@@ -27,7 +28,7 @@ public:
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   virtual void resizeEvent(QResizeEvent *e);
-  virtual void rebuild();
+  virtual void rebuild(int idx = 0);
   std::string getSelected();
   virtual QWidget *getContent();
   virtual void unFocus();

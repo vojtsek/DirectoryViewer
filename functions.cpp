@@ -48,3 +48,8 @@ bool isArch(std::string &path){
     std::string ext(getExtension(path));
   return ((ext == "gz") || (ext == "bz2") || (ext == "zip") || (ext == "rar"));
 }
+
+bool isImg(std::string &path){
+    std::string ext(getExtension(path));
+  return ((ext == "png") || (ext == "jpg") || (ext == "gif"));
+}

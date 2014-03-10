@@ -18,7 +18,7 @@
 #include <string>
 
 int ArchiveViewer::getSelIdx(){
-  return currentIndex().row();
+  return idx;
 }
 
 void ArchiveViewer::focusInEvent(QFocusEvent *e){
@@ -128,7 +128,7 @@ void ArchiveViewer::readArch(){
     }
 }
 
-void ArchiveViewer::rebuild(){
+void ArchiveViewer::rebuild(int idx){
     readArch();
   clear();
   buildTree(nullptr, 0);

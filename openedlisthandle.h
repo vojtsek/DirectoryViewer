@@ -38,6 +38,7 @@ class OpenedListHandle: public QWidget{
 public:
   std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
   std::vector<MyViewType *> to_del;
+  std::vector<pid_t> childs;
   QVBoxLayout *v_layout, *v_layout2;
   QHBoxLayout *h_layout1, *h_layout2;
   QGridLayout *g_layout;

@@ -13,11 +13,11 @@ public:
   explicit MyTreeView(QWidget *p = 0): QTreeWidget(p), MyViewType("", "") {
     setSelectionBehavior(QAbstractItemView::SelectRows);
   }
-  MyTreeView(std::string pa, std::string pat, bool rec, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, pat) {
+  MyTreeView(std::string pa, std::string pat, bool rec, int idx = 0, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, pat) {
     setColumnCount(3);
     recursive = rec;
     setSelectionBehavior(QAbstractItemView::SelectRows);
-    rebuild();
+    rebuild(idx);
   }
 //  MyTreeView(const MyTreeView&);
   virtual ~MyTreeView() {}
@@ -25,7 +25,7 @@ public:
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   virtual void resizeEvent(QResizeEvent *);
-  virtual void rebuild();
+  virtual void rebuild(int idx = 0);
   virtual std::string getSelected();
   virtual int getSelIdx();
   virtual void unFocus();

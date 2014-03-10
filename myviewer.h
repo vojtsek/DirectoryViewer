@@ -2,15 +2,20 @@
 #define MYVIEWER_H
 
 #include "types.h"
+#include "functions.h"
 #include <QPlainTextEdit>
 #include <QLineEdit>
 
 class MyViewer : public QPlainTextEdit, public MyViewType
 {
   Q_OBJECT
+    bool image;
+    int idx;
 public:
   explicit MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType("","") {}
-  MyViewer(std::string pa, std::string pat, QWidget *p = 0): QPlainTextEdit(p), MyViewType(pa, pat) {
+  MyViewer(std::string pa, std::string pat, int i = 0, QWidget *p = 0): QPlainTextEdit(p), MyViewType(pa, pat), image(false), idx(i) {
+      if(isImg(path))
+          image = true;
     rebuild();
   }
   virtual ~MyViewer() {}
@@ -18,7 +23,7 @@ public:
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   virtual void resizeEvent(QResizeEvent *e);
-  virtual void rebuild();
+  virtual void rebuild(int idx = 0);
   std::string getSelected();
   virtual QWidget *getContent();
   virtual void unFocus();

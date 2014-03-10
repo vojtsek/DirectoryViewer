@@ -8,12 +8,13 @@
 
 class ArchiveViewer : public QTreeWidget, public MyViewType
 {
+    int idx;
   Q_OBJECT
 public:
   explicit ArchiveViewer(QWidget *p = 0): QTreeWidget(p), MyViewType("", "") {
     setSelectionBehavior(QAbstractItemView::SelectRows);
   }
-  ArchiveViewer(std::string pa, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, "*") {
+  ArchiveViewer(std::string pa, int i = 0, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, "*"), idx(i) {
     setColumnCount(3);
     setSelectionBehavior(QAbstractItemView::SelectRows);
     rebuild();
@@ -24,7 +25,7 @@ public:
   virtual void focusOutEvent(QFocusEvent *);
   virtual void keyPressEvent(QKeyEvent *);
   virtual void resizeEvent(QResizeEvent *);
-  virtual void rebuild();
+  virtual void rebuild(int idx = 0);
   virtual std::string getSelected();
   virtual int getSelIdx();
   virtual void unFocus();

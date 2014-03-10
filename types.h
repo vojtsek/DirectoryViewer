@@ -55,7 +55,7 @@ public:
   OSInterface *osi;
   int w, col_width;
   virtual std::string getSelected() = 0;
-  virtual void rebuild() = 0;
+  virtual void rebuild(int idx = 0) = 0;
   virtual int getSelIdx() = 0;
   virtual void setFocus() = 0;
   virtual void unFocus() = 0;
