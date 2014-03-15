@@ -30,8 +30,10 @@
    </property>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
-     <string>Options</string>
+     <string>Menu</string>
     </property>
+    <addaction name="actionOption"/>
+    <addaction name="actionExit"/>
    </widget>
    <addaction name="menuOptions"/>
   </widget>
@@ -43,6 +45,19 @@
     <bool>false</bool>
    </attribute>
   </widget>
+  <action name="actionOption">
+   <property name="text">
+    <string>Options...</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

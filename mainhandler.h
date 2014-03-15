@@ -6,6 +6,7 @@
 #include <QObject>
 #include <string>
 
+extern int size_in;
 class OpenedListHandle;
 
 class MainHandler : public QObject
@@ -13,8 +14,8 @@ class MainHandler : public QObject
   Q_OBJECT
   void prepare_cmd(cmd_info_T &, bool &, bool &, bool, OpenedListHandle *&);
 public:
-  unsigned int max_lists, col_count, init_count, size_in;
-  enum {B, KB, MB, GB};
+  unsigned int max_lists, col_count, init_count;
+  static enum {B, KB, MB, GB} sz;
   std::string init_dir;
   std::map<Qt::Key, ButtonHandle<MainHandler>> tool_btts;
   std::vector<OpenedListHandle *> opened_lists;

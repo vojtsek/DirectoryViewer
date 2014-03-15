@@ -7,6 +7,7 @@
 #include "stylesheets.h"
 
 #include <QPushButton>
+#include <QShortcut>
 #include <QComboBox>
 #include <typeinfo>
 #include <QMessageBox>
@@ -32,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
   handler(new MainHandler), focus_idx(0)
 {
   ui->setupUi(this);
+  QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
+  QShortcut *shortcut = new QShortcut(QKeySequence("F10"), this);
+  QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(exit()));
   prepareLayout();
 }
 
@@ -138,6 +142,11 @@ void MainWindow::updateFocus(){
     }
 }
 
+void MainWindow::exit(){
+    if(QMessageBox::question(nullptr, "Exit?", "Do you wanna quit?", QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+        return;
+    QApplication::quit();
+}
 
 void MainWindow::handleTab(){
   QWidget *first, *second;

@@ -26,283 +26,328 @@ OSInterface::OSInterface()
 }
 
 bool OSInterface::isOpenable(std::string path){
-  if (getSize(path) > pow(1024, 2)){
-      std::string warn = "File is quite large. Proceed with opening?";
-      if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-        return false;
+    if ((getSize(path) > pow(1024, 2)) && !isArch(path)){
+        std::string warn = "File is quite large. Proceed with opening?";
+        if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+            return false;
     }
-  return true;
+    return true;
 }
 
 void OSInterface::copy(cmd_info_T &ci){
-  for(auto src : ci.source_files){
-      for(auto dstf : ci.destination_files[src]){
-          try{
-            doCopy(src, dstf);
-            std::stringstream ss;
-            ss << "Copy " << src << " to: " << dstf << std::endl;
-            ss << "Success!";
-            std::string str = ss.str();
-            MyDialog::MsgBox(str);
-          }catch(OSException *e){
-            e->process();
-          }
+    for(auto src : ci.source_files){
+        for(auto dstf : ci.destination_files[src]){
+            try{
+                doCopy(src, dstf);
+                std::stringstream ss;
+                ss << "Copy " << src << " to: " << dstf << std::endl;
+                ss << "Success!";
+                std::string str = ss.str();
+                // MyDialog::MsgBox(str);
+            }catch(OSException *e){
+                e->process();
+            }
         }
     }
 }
 
 void OSInterface::move(cmd_info_T &ci){
-  for(auto src : ci.source_files){
-      for(auto dstf : ci.destination_files[src]){
-          try{
-            doMove(src, dstf);
-            std::stringstream ss;
-            ss << "Move " << src << " to: " << dstf << std::endl;
-            ss << "Success!";
-            std::string str = ss.str();
-            MyDialog::MsgBox(str);
-          }catch(OSException *e){
-            e->process();
-          }
+    for(auto src : ci.source_files){
+        for(auto dstf : ci.destination_files[src]){
+            try{
+                doMove(src, dstf);
+                std::stringstream ss;
+                ss << "Move " << src << " to: " << dstf << std::endl;
+                ss << "Success!";
+                std::string str = ss.str();
+                // MyDialog::MsgBox(str);
+            }catch(OSException *e){
+                e->process();
+            }
         }
     }
 }
 
 void OSInterface::rename(cmd_info_T &ci){
-  for(auto src : ci.source_files){
-      for(auto dstf : ci.destination_files[src]){
-          try{
-            doMove(src, dstf);
-            std::stringstream ss;
-            ss << "Rename: " << src << " -> " << dstf << std::endl;
-            ss << "Success!";
-            std::string str = ss.str();
-            MyDialog::MsgBox(str);
-          }catch(OSException *e){
-            e->process();
-          }
+    for(auto src : ci.source_files){
+        for(auto dstf : ci.destination_files[src]){
+            try{
+                doMove(src, dstf);
+                std::stringstream ss;
+                ss << "Rename: " << src << " -> " << dstf << std::endl;
+                ss << "Success!";
+                std::string str = ss.str();
+                // MyDialog::MsgBox(str);
+            }catch(OSException *e){
+                e->process();
+            }
         }
     }
 }
 
 void OSInterface::remove(cmd_info_T &ci){
-  for(auto src : ci.source_files){
-      try{
-        doRemove(src);
-        std::stringstream ss;
-        ss << "Remove " << src << std::endl;
-        ss << "Success!";
-        std::string str = ss.str();
-        MyDialog::MsgBox(str);
-      }catch(OSException *e){
-        e->process();
-      }
-      catch(std::exception e) {} //nepotvrzeni smazani adresare
+    for(auto src : ci.source_files){
+        try{
+            std::string warn = src + "\n is a directory. Remove anyvway? \n";
+            if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+                throw std::exception();
+            doRemove(src);
+            std::stringstream ss;
+            ss << "Remove " << src << std::endl;
+            ss << "Success!";
+            std::string str = ss.str();
+            //  MyDialog::MsgBox(str);
+        }catch(OSException *e){
+            e->process();
+        }
+        catch(std::exception e) {} //nepotvrzeni smazani adresare
     }
 
 }
 
 void OSInterface::doCopy(std::string &src, std::string &dst){
-  if(isDir(src)){
-      OSInterface os;
-      os.getDirInfo(src, "*");
+    if(isDir(src)){
+        OSInterface os;
+        os.getDirInfo(src, "*");
 #ifdef __unix__
-      if(mkdir(dst.c_str(), 0755) == -1)
+        if(mkdir(dst.c_str(), 0755) == -1)
 #endif
 #ifdef __WIN32__
-      if(mkdir(dst.c_str()) == -1)
+            if(mkdir(dst.c_str()) == -1)
 #endif
-        throw new OSException(src, strerror(errno));
-      for(auto &a : os.dirs){
-          std::string nsrc, ndst;
-          nsrc = src;
-          nsrc.push_back(dir_sep);
-          nsrc.append(a->name);
-          ndst = dst;
-          ndst.push_back(dir_sep);
-          ndst.append(a->name);
-          doCopy(nsrc, ndst);
+                throw new OSException(src, strerror(errno));
+        for(auto &a : os.dirs){
+            std::string nsrc, ndst;
+            nsrc = src;
+            nsrc.push_back(dir_sep);
+            nsrc.append(a->name); std::string warn = src + "\n is a directory. Remove anyvway? \n";
+            if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+                throw std::exception();
+            ndst = dst;
+            ndst.push_back(dir_sep);
+            ndst.append(a->name);
+            doCopy(nsrc, ndst);
         }
     }else{
-      std::ifstream file(src, std::ios::in | std::ios::binary | std::ios::ate);
-      std::ifstream test(dst, std::ios::in | std::ios::binary | std::ios::ate);
-      if(test.tellg() > 0)
-        throw new OSException(dst, "File exists");
-      test.close();
-      std::ofstream nfile(dst, std::ios::out | std::ios::binary | std::ios::ate);
-      char buf[BUFSIZE];
-      long long copied = 0;
-      if(!nfile.is_open())
-        throw new OSException(dst, "Failed to create.");
-      if (file.is_open())
+        std::ifstream file(src, std::ios::in | std::ios::binary | std::ios::ate);
+        std::ifstream test(dst, std::ios::in | std::ios::binary | std::ios::ate);
+        if(test.tellg() > 0)
+            throw new OSException(dst, "File exists");
+        test.close();
+        std::ofstream nfile(dst, std::ios::out | std::ios::binary | std::ios::ate);
+        char buf[BUFSIZE];
+        long long copied = 0;
+        if(!nfile.is_open())
+            throw new OSException(dst, "Failed to create.");
+        if (file.is_open())
         {
-          long long size = file.tellg();
-          file.seekg (0, std::ios::beg);
-          while(file.good() && !file.eof()){
-              file.read(buf, BUFSIZE);
-              nfile.write(buf, file.gcount());
-              copied += file.gcount();
-              if(nfile.fail())
-                throw new OSException(dst, "Failed to write.");
+            long long size = file.tellg();
+            file.seekg (0, std::ios::beg);
+            while(file.good() && !file.eof()){
+                file.read(buf, BUFSIZE);
+                nfile.write(buf, file.gcount());
+                copied += file.gcount();
+                if(nfile.fail())
+                    throw new OSException(dst, "Failed to write.");
             }
-          if(copied != size)
-            throw new OSException(src, "Failed to copy.");
+            if(copied != size)
+                throw new OSException(src, "Failed to copy.");
         }else
-        throw new OSException(src, "Failed to open.");
-      nfile.flush();
-      file.close();
-      nfile.close();
+            throw new OSException(src, "Failed to open.");
+        nfile.flush();
+        file.close();
+        nfile.close();
     }
+}
+
+size_t OSInterface::computeDirSize(std::string path){
+    if(!isDir(path))
+        //return 0;
+        throw new OSException(path, "Failed to open dir.");
+    size_t size(0);
+    OSInterface os;
+    os.getDirInfo(path, "*");
+    for(auto &a : os.dirs){
+        if(isDir(path + dir_sep + a->name))
+            size += computeDirSize(path + dir_sep + a->name);
+        else
+            size += getSize(path + dir_sep + a->name);
+    }
+    return size;
 }
 
 #ifdef __unix__
 
 std::string OSInterface::getCWD(){
-  char buf[255];
-  getcwd(buf, 255);
-  return std::string(buf);
+    char buf[255];
+    getcwd(buf, 255);
+    return std::string(buf);
 }
 
 void OSInterface::create(std::string path){
     if(mkdir(path.c_str(), 0755) == -1)
-      throw new OSException(path, strerror(errno));
+        throw new OSException(path, strerror(errno));
 }
 
 
 void OSInterface::doMove(std::string &src, std::string &dst){
-  std::stringstream ss;
-  if(isDir(src)){
-      OSInterface os;
-      os.getDirInfo(src, "*");
-      if(mkdir(dst.c_str(), 0755) == -1)
-        throw new OSException(src, strerror(errno));
-      for(auto &a : os.dirs){
-          std::string nsrc, ndst;
-          nsrc = src;
-          nsrc.push_back(dir_sep);
-          nsrc.append(a->name);
-          ndst = dst;
-          ndst.push_back(dir_sep);
-          ndst.append(a->name);
-          doMove(nsrc, ndst);
+    std::stringstream ss;
+    if(isDir(src)){
+        OSInterface os;
+        os.getDirInfo(src, "*");
+        if(mkdir(dst.c_str(), 0755) == -1)
+            throw new OSException(src, strerror(errno));
+        for(auto &a : os.dirs){
+            std::string nsrc, ndst;
+            nsrc = src;
+            nsrc.push_back(dir_sep);
+            nsrc.append(a->name);
+            ndst = dst;
+            ndst.push_back(dir_sep);
+            ndst.append(a->name);
+            doMove(nsrc, ndst);
         }
-      if(rmdir(src.c_str()) == -1)
-        throw new OSException(src, strerror(errno));
+        if(rmdir(src.c_str()) == -1)
+            throw new OSException(src, strerror(errno));
     }else{
 
-      ss << "Move " << src << " to: " << dst << std::endl;
-      if(((link(src.c_str(), dst.c_str())) == -1) || (unlink(src.c_str()) == -1))
-        throw new OSException(ss.str(), strerror(errno));
+        ss << "Move " << src << " to: " << dst << std::endl;
+        if(((link(src.c_str(), dst.c_str())) == -1) || (unlink(src.c_str()) == -1))
+            throw new OSException(ss.str(), strerror(errno));
     }
 }
 
 void OSInterface::doRemove(std::string &src){
-  std::stringstream ss;
-  if(isDir(src)){
-      std::string warn = src + "\n is a directory. Remove anyvway? \n";
-      if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-        throw std::exception();
-      OSInterface os;
-      os.getDirInfo(src, "*");
-      for(auto &a : os.dirs){
-          std::string nsrc;
-          nsrc = src;
-          nsrc.push_back(dir_sep);
-          nsrc.append(a->name);
-          doRemove(nsrc);
+    std::stringstream ss;
+    if(isDir(src)){
+        OSInterface os;
+        os.getDirInfo(src, "*");
+        for(auto &a : os.dirs){
+            std::string nsrc;
+            nsrc = src;
+            nsrc.push_back(dir_sep);
+            nsrc.append(a->name);
+            doRemove(nsrc);
         }
-      if(rmdir(src.c_str()) == -1)
-        throw new OSException(src, strerror(errno));
+        if(rmdir(src.c_str()) == -1)
+            throw new OSException(src, strerror(errno));
     }else{
-      ss << "Remove " << src << std::endl;
-      if((unlink(src.c_str())) == -1)
-        throw new OSException(ss.str(), strerror(errno));
+        ss << "Remove " << src << std::endl;
+        if((unlink(src.c_str())) == -1)
+            throw new OSException(ss.str(), strerror(errno));
     }
 }
 
 std::string OSInterface::getPrefix(){ return "/"; }
 
 std::size_t OSInterface::getSize(std::string p){
-  struct stat *finfo = new struct stat();
-  lstat(p.c_str(), finfo);
-  return finfo->st_size;
+    struct stat *finfo = new struct stat();
+    lstat(p.c_str(), finfo);
+    return finfo->st_size;
 }
 
 bool OSInterface::isDir(std::string path){
-  DIR *dir;
-  if((dir = opendir(path.c_str())) == NULL){
-      return false;
-   }
-  return true;
+    DIR *dir;
+    if((dir = opendir(path.c_str())) == NULL){
+        return false;
+    }
+    closedir(dir);
+    return true;
+}
+
+void OSInterface::openFile(std::string &path){
+    if(getExtension(path) == "pdf"){
+        pid_t pid;
+        switch(pid = fork()){
+        default:
+            //childs.push_back(pid);
+            break;
+        case 0:
+            std::string cmd("/bin/mupdf");
+            execl(cmd.c_str(), getBasename(cmd).c_str(), path.c_str());
+            break;
+        }
+    }else if(getExtension(path) == "avi"){
+        pid_t pid;
+        switch(pid = fork()){
+        default:
+            //childs.push_back(pid);
+            break;
+        case 0:
+            std::string cmd("/bin/vlc");
+            execl(cmd.c_str(), getBasename(cmd).c_str(), path.c_str());
+            break;
+        }
+    }
 }
 
 void OSInterface::getDirInfo(std::string path, std::string pattern){
-  DIR *dir;
-  if((dir = opendir(path.c_str())) == NULL){
-      throw new OSException(path, "Failed to open dir.");
-      return;
+    DIR *dir;
+    if((dir = opendir(path.c_str())) == NULL){
+        throw new OSException(path, "Failed to open dir.");
+        //return;
     }
-  struct dirent *entry = new struct dirent();
-  struct stat *finfo = new struct stat();
-  std::string abs_path(path), name;
-  dirEntryT *de;
-  while((entry = readdir(dir))){
-      de = new dirEntryT();
-      name = entry->d_name;
-      de->ext_name = getExtension(name);
-      if((name == ".") || name == "..") continue;
-      if((!matchExpression(name, pattern)) && !isDir(name)) continue;
-      lstat((abs_path + dir_sep + name).c_str(), finfo);
-      if(finfo == NULL)
-        throw new OSException(name, std::string("failed to read file info."));
-      de->name = name;
-      if(S_ISREG(finfo->st_mode)){
-          de->type = de->FILE;
-          de->type_name = "FILE";
+    struct dirent *entry = new struct dirent();
+    struct stat *finfo = new struct stat();
+    std::string abs_path(path), name;
+    dirEntryT *de;
+    while((entry = readdir(dir))){
+        de = new dirEntryT();
+        name = entry->d_name;
+        de->ext_name = getExtension(name);
+        if((name == ".") || name == "..") continue;
+        if((!matchExpression(name, pattern)) && !isDir(name)) continue;
+        lstat((abs_path + dir_sep + name).c_str(), finfo);
+        if(finfo == NULL)
+            throw new OSException(name, std::string("failed to read file info."));
+        de->name = name;
+        if(S_ISREG(finfo->st_mode)){
+            de->type = de->FILE;
+            de->type_name = "FILE";
         }else if(S_ISDIR(finfo->st_mode)){
-          de->type = de->DIR;
-          de->type_name = "DIR";
+            de->type = de->DIR;
+            de->type_name = "DIR";
         }else if(S_ISLNK(finfo->st_mode)){
-          de->type = de->LINK;
-          de->type_name = "LINK";
+            de->type = de->LINK;
+            de->type_name = "LINK";
         }else{
-          de->type = de->UNKNOWN;
-          de->type_name = "UNKNOWN";
+            de->type = de->UNKNOWN;
+            de->type_name = "UNKNOWN";
         }
-      if(isArch(de->name)){
-          de->type_name = "ARCHIVE";
-          de->type = de->ARCHIVE;
+        if(isArch(de->name)){
+            de->type_name = "ARCHIVE";
+            de->type = de->ARCHIVE;
         }
-      de->byte_size = finfo->st_size;
-      char buf[255];
-      sprintf(buf, "%s", ctime(&finfo->st_mtime));
-      std::stringstream ss;
-      mode_t mode = finfo->st_mode;
-      std::string date(buf);
-      date = date.substr(0, date.size() - 1);
-      de->mod_time = date;
-      if((mode & S_IRWXU) & S_IRUSR) ss << "r"; else ss << "-";
-      if((mode & S_IRWXU) & S_IWUSR) ss << "w"; else ss << "-";
-      if((mode & S_IRWXU) & S_IXUSR) ss << "x"; else ss << "-";
-      ss << " ";
-      if((mode & S_IRWXG) & S_IRGRP) ss << "r"; else ss << "-";
-      if((mode & S_IRWXG) & S_IWGRP) ss << "w"; else ss << "-";
-      if((mode & S_IRWXG) & S_IXGRP) ss << "x"; else ss << "-";
-      ss << " ";
-      if((mode & S_IRWXO) & S_IROTH) ss << "r"; else ss << "-";
-      if((mode & S_IRWXO) & S_IWOTH) ss << "w"; else ss << "-";
-      if((mode & S_IRWXO) & S_IXOTH) ss << "x"; else ss << "-";
-      de->perms = std::string(ss.str());
-      dirs.push_back(de);
+        de->byte_size = finfo->st_size;
+        char buf[255];
+        sprintf(buf, "%s", ctime(&finfo->st_mtime));
+        std::stringstream ss;
+        mode_t mode = finfo->st_mode;
+        std::string date(buf);
+        date = date.substr(0, date.size() - 1);
+        de->mod_time = date;
+        if((mode & S_IRWXU) & S_IRUSR) ss << "r"; else ss << "-";
+        if((mode & S_IRWXU) & S_IWUSR) ss << "w"; else ss << "-";
+        if((mode & S_IRWXU) & S_IXUSR) ss << "x"; else ss << "-";
+        ss << " ";
+        if((mode & S_IRWXG) & S_IRGRP) ss << "r"; else ss << "-";
+        if((mode & S_IRWXG) & S_IWGRP) ss << "w"; else ss << "-";
+        if((mode & S_IRWXG) & S_IXGRP) ss << "x"; else ss << "-";
+        ss << " ";
+        if((mode & S_IRWXO) & S_IROTH) ss << "r"; else ss << "-";
+        if((mode & S_IRWXO) & S_IWOTH) ss << "w"; else ss << "-";
+        if((mode & S_IRWXO) & S_IXOTH) ss << "x"; else ss << "-";
+        de->perms = std::string(ss.str());
+        dirs.push_back(de);
     }
-  closedir(dir);
-  std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
-      if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
-        return true;
-      else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
-        return false;
-      else
-        return d1->name < d2->name; });
+    closedir(dir);
+    std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
+        if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
+            return true;
+        else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
+            return false;
+        else
+            return d1->name < d2->name; });
 }
 
 #endif // __unix__
@@ -320,19 +365,24 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
 
 
 std::string OSInterface::getCWD(){
-  char buf[255];
-  _getcwd(buf, 255);
-  return std::string(buf);
+    char buf[255];
+    _getcwd(buf, 255);
+    return std::string(buf);
 }
 
+void OSInterface::create(std::string path){
+    std::wstring p(path.begin(), path.end());
+    if(!CreateDirectory(p.c_str(), NULL))
+        throw new OSException(path, strerror(errno));
+}
 
 void OSInterface::doMove(std::string &src, std::string &dst){
     std::wstring oldf, newf;
     std::stringstream ss;
     oldf.assign(src.begin(), src.end());
     newf.assign(dst.begin(), dst.end());
-      ss << "Move " << src << " to: " << dst << std::endl;
-      if(!MoveFile(oldf.c_str(), newf.c_str()))
+    ss << "Move " << src << " to: " << dst << std::endl;
+    if(!MoveFile(oldf.c_str(), newf.c_str()))
         throw new OSException(ss.str(), strerror(errno));
 }
 
@@ -341,24 +391,24 @@ void OSInterface::doRemove(std::string &src){
     std::stringstream ss;
     oldf.assign(src.begin(), src.end());
     ss << "Remove " << src << std::endl;
-  if(isDir(src)){
-      std::string warn = src + "\n is a directory. Remove anyvway? \n";
-      if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-        throw std::exception();
-      OSInterface os;
-      os.getDirInfo(src, "*");
-      for(auto &a : os.dirs){
-          std::string nsrc;
-          nsrc = src;
-          nsrc.push_back(dir_sep);
-          nsrc.append(a->name);
-          doRemove(nsrc);
+    if(isDir(src)){
+        std::string warn = src + "\n is a directory. Remove anyvway? \n";
+        if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+            throw std::exception();
+        OSInterface os;
+        os.getDirInfo(src, "*");
+        for(auto &a : os.dirs){
+            std::string nsrc;
+            nsrc = src;
+            nsrc.push_back(dir_sep);
+            nsrc.append(a->name);
+            doRemove(nsrc);
         }
-      if(!RemoveDirectory(oldf.c_str()))
-          throw new OSException(ss.str(), strerror(errno));
+        if(!RemoveDirectory(oldf.c_str()))
+            throw new OSException(ss.str(), strerror(errno));
     }else{
-      if(!DeleteFile(oldf.c_str()))
-          throw new OSException(ss.str(), strerror(errno));
+        if(!DeleteFile(oldf.c_str()))
+            throw new OSException(ss.str(), strerror(errno));
     }
 }
 
@@ -396,28 +446,31 @@ bool OSInterface::isDir(std::string path){
 
 void OSInterface::getDirInfo(std::string path, std::string pattern){
     WIN32_FIND_DATA data;
-    std::wstring ppath(L"*"), nname;
-   // ppath.assign(path.begin(), path.end());
-    if(_chdir(path.c_str()))
-        throw new OSException(path, "Failed to open dir.");
-
+    repairPath(path);
+    path.append("*");
+    std::wstring ppath, whole_name;
+    ppath.assign(path.begin(), path.end());
+    path.pop_back();
     dirEntryT *de;
     HANDLE hFile = FindFirstFile(ppath.c_str(), &data);
 
-    if  ((hFile == INVALID_HANDLE_VALUE) && (GetLastError() != ERROR_FILE_NOT_FOUND))
-        throw new OSException(path, "Failed to open dir.");
-    std::string name;
+    if  ((hFile == INVALID_HANDLE_VALUE) && (GetLastError() != ERROR_FILE_NOT_FOUND)) return;
+        //throw new OSException(path, "Failed to open dir.");
+    std::string name, tmpname;
     while(FindNextFile(hFile, &data) != 0 || GetLastError() != ERROR_NO_MORE_FILES)
     {
         de = new dirEntryT();
-        nname = data.cFileName;
-        name.assign(nname.begin(), nname.end());
+        whole_name = whole_name = data.cFileName;
+        name.assign(whole_name.begin(), whole_name.end());
+        tmpname = path + name;
+        std::cout << name << std::endl;
+        whole_name.assign(tmpname.begin(), tmpname.end());
         de->ext_name = getExtension(name);
         WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-        if(!GetFileAttributesEx(nname.c_str(), GetFileExInfoStandard, &fileInfo)) continue;
+        if(!GetFileAttributesEx(whole_name.c_str(), GetFileExInfoStandard, &fileInfo)) continue;
         DWORD ftype = fileInfo.dwFileAttributes;
         if (ftype == INVALID_FILE_ATTRIBUTES) continue;
-           // throw new OSException(name, "Invalid file");
+        // throw new OSException(name, "Invalid file");
         if((name == ".") || name == "..") continue;
         if((!matchExpression(name, pattern)) && !isDir(name)) continue;
         de->name = name;
@@ -434,30 +487,30 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
             de->type = de->UNKNOWN;
             de->type_name = "UNKNOWN";
         }
-      if(isArch(de->ext_name)){
-          de->type_name = "ARCHIVE";
-          de->type = de->ARCHIVE;
+        if(isArch(de->ext_name)){
+            de->type_name = "ARCHIVE";
+            de->type = de->ARCHIVE;
         }
-      de->byte_size = getSize(name);
-      SYSTEMTIME stUTC, stLocal;
-      LPTSTR lpszString;
-      FileTimeToSystemTime(&fileInfo.ftLastWriteTime, &stUTC);
-      SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &stLocal);
-      char buf[255];
-      sprintf(buf, "%02d.%02d.%d  %02d:%02d",
-              stLocal.wDay, stLocal.wMonth, stLocal.wYear,
-              stLocal.wHour, stLocal.wMinute);
-      de->mod_time = std::string(buf);
+        de->byte_size = getSize(name);
+        SYSTEMTIME stUTC, stLocal;
+        LPTSTR lpszString;
+        FileTimeToSystemTime(&fileInfo.ftLastWriteTime, &stUTC);
+        SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &stLocal);
+        char buf[255];
+        sprintf(buf, "%02d.%02d.%d  %02d:%02d",
+                stLocal.wDay, stLocal.wMonth, stLocal.wYear,
+                stLocal.wHour, stLocal.wMinute);
+        de->mod_time = std::string(buf);
 
-      dirs.push_back(de);
+        dirs.push_back(de);
     }
-  std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
-      if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
-        return true;
-      else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
-        return false;
-      else
-        return d1->name < d2->name; });
+    std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
+        if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
+            return true;
+        else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
+            return false;
+        else
+            return d1->name < d2->name; });
 }
 
 #endif // __WIN32__

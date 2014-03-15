@@ -190,28 +190,8 @@ void OpenedListHandle::processItem(std::string new_path){
           }
       }
       le1->setText(QString::fromStdString(new_path)); //signal
-  }else if(getExtension(new_path) == "pdf"){
-      pid_t pid;
-      switch(pid = fork()){
-      default:
-          childs.push_back(pid);
-          break;
-      case 0:
-          std::string cmd("/bin/mupdf");
-          execl(cmd.c_str(), getBasename(cmd).c_str(), new_path.c_str());
-          break;
-      }
-  }else if(getExtension(new_path) == "avi"){
-    pid_t pid;
-    switch(pid = fork()){
-    default:
-        childs.push_back(pid);
-        break;
-    case 0:
-        std::string cmd("/bin/vlc");
-        execl(cmd.c_str(), getBasename(cmd).c_str(), new_path.c_str());
-        break;
-    }
+  }else if(isKnown(new_path)){
+      OSInterface::openFile(new_path);
     }else if((OSInterface::isOpenable(new_path) && (!isArch(new_path)))){
       std::string old = path;
       path = new_path;

@@ -38,11 +38,13 @@ public:
   static void doMove(std::string &, std::string &);
   static void doRemove(std::string &);
   static void doRename(std::string &, std::string &);
+  static void openFile(std::string &);
+  static size_t computeDirSize(std::string);
 //  static bool exists(std::string &);
   static std::string getCWD();
   static std::string getPrefix();
   static bool isDir(std::string);
-  static std::size_t getSize(std::string);
+  static size_t getSize(std::string);
   static bool isOpenable(std::string);
 };
 

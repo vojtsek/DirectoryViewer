@@ -15,9 +15,10 @@
 #include <fstream>
 
 MainHandler::MainHandler(QObject *parent) :
-  QObject(parent), max_lists(4), col_count(2), init_count(2), size_in(KB)
+  QObject(parent), max_lists(4), col_count(2), init_count(2)
 {
   int param;
+  size_in = KB;
   init_dir = OSInterface::getCWD();
   std::string line, option, d;
   try{
@@ -38,6 +39,7 @@ MainHandler::MainHandler(QObject *parent) :
           }else if(option == "column_count") col_count = param;
         else if(option == "max_list_count") max_lists = param;
         else if(option == "init_list_count") init_count = param;
+        else if(option == "size_in") size_in = param;
       }
   }catch(std::exception e) { std::cout << e.what() << std::endl; }
 }
@@ -48,7 +50,7 @@ void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst, 
   cmd_info.paths.clear();
   if(add_dst){
       for(auto &a : opened_lists){
-          if((a->content->marked) && (!a->content->is_focused)){
+          if(((a->content->marked) || opened_lists.size() == 2) && (!a->content->is_focused)){
               is_dst = true;
               cmd_info.paths.insert(a->content->path);
             }
@@ -87,7 +89,7 @@ void MainHandler::copy(){
       src->content->multi_selection.clear();
       src->content->rebuild();
       for(auto &a : opened_lists)
-        if(a->content->marked) a->content->rebuild();
+        if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -134,7 +136,7 @@ void MainHandler::move() {
       src->content->multi_selection.clear();
       src->content->rebuild();
       for(auto &a : opened_lists)
-        if(a->content->marked) a->content->rebuild();
+        if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
     }else{
       if(!is_dst){
           std::string err("No selected destinations.");
@@ -179,6 +181,7 @@ void MainHandler::rename() {
 }
 
 void MainHandler::create() {
+    char inval = 0;
     for(auto &a : opened_lists){
         if(a->content->is_focused){
             QString lbl("Enter new name:");
@@ -189,8 +192,17 @@ void MainHandler::create() {
                 emit(error(err));
                 break;
               }
+            if((inval = isValidFn(name)) != 0){
+                std::string err("Invalid character '");
+                err.push_back(inval);
+                err.push_back('\'');
+                emit(error(err));
+                break;
+              }
             repairPath(a->content->path);
-            OSInterface::create(a->content->path + name);
+            try{
+                OSInterface::create(a->content->path + name);
+            }catch(OSException *e) {e->process();}
             a->content->rebuild();
         }
     }

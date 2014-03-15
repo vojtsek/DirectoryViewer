@@ -48,6 +48,6 @@ const QString unfocused_list_style = "QPlainTextEdit, QTableView, QTreeView {"
 
 const QString marked_list_style = "QPlainTextEdit, QTableView, QTreeView {"
     + list_style +
-    "background:#efe;"
-    "color:#000;border: 1px solid #09b;}";
+ //   "background:#efe;"
+    "color:#000;border: 2px solid #09b;}";
 #endif // STYLESHEETS_H

@@ -53,3 +53,18 @@ bool isImg(std::string &path){
     std::string ext(getExtension(path));
   return ((ext == "png") || (ext == "jpg") || (ext == "gif"));
 }
+
+bool isKnown(std::string &path){
+    std::string ext(getExtension(path));
+  return ((ext == "pdf") || (ext == "avi") || (ext == "doc") || (ext == "ppt"));
+}
+
+char isValidFn(std::string &path){
+    std::string forbidden(" <>|\:()&;#?*");
+    forbidden.push_back(OSInterface::dir_sep);
+    for(char &a : forbidden){
+        if(path.find(a) != std::string::npos)
+            return a;
+    }
+    return 0;
+}

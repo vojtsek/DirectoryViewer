@@ -1,6 +1,7 @@
 #include "mytreeview.h"
 #include "osinterface.h"
 #include "mydialog.h"
+#include "mainhandler.h"
 #include "functions.h"
 #include "types.h"
 #include "stylesheets.h"
@@ -14,6 +15,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
+extern int size_in;
 
 int MyTreeView::getSelIdx(){
   return currentIndex().row();
@@ -75,7 +78,21 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
       item->setText(1, QString::fromStdString(e->type_name));
       item->setFont(1, italic_font);
       if(e->type == e->DIR) item->setFont(0, bold_font);
-      ss << e->byte_size;
+      ss << round((e->byte_size / pow(1024, size_in)));
+    switch(size_in){
+      case MainHandler::B:
+        ss << " B";
+        break;
+      case MainHandler::KB:
+        ss << " KB";
+        break;
+      case MainHandler::MB:
+        ss << " MB";
+        break;
+      case MainHandler::GB:
+        ss << " GB";
+        break;
+      }
       item->setText(2, QString::fromStdString(ss.str()));
       if(recursive && top){
           if(e->type == e->DIR){
@@ -149,6 +166,7 @@ void MyTreeView::die(){
 }
 
 void MyTreeView::keyPressEvent(QKeyEvent *e){
+    size_t size;
     switch (e->key()) {
     case Qt::Key_Escape:
         multi_selection.clear();
@@ -176,7 +194,29 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
     case Qt::Key_Up:
         QTreeWidget::keyPressEvent(e);
         if(e->modifiers() & Qt::ShiftModifier)
-          changeSelection(getSelIdx());
+            changeSelection(getSelIdx());
+        break;
+    case Qt::Key_Space:
+        try{
+        size = OSInterface::computeDirSize(getSelected());
+        std::stringstream ss;
+        ss << round((size / pow(1024, size_in)));
+      switch(size_in){
+        case MainHandler::B:
+          ss << " B";
+          break;
+        case MainHandler::KB:
+          ss << " KB";
+          break;
+        case MainHandler::MB:
+          ss << " MB";
+          break;
+        case MainHandler::GB:
+          ss << " GB";
+          break;
+        }
+        currentItem()->setText(2, QString::fromStdString(ss.str()));
+    }catch(OSException *e) { std::cout << e->what() << std::endl; }
         break;
     default:
         QTreeWidget::keyPressEvent(e);
@@ -204,21 +244,22 @@ void MyTreeView::updateSelection(){
               topLevelItem(i)->setBackground(0,brb);
               topLevelItem(i)->setFont(0, sel_font);
               topLevelItem(i)->setBackground(1,brb);
-              topLevelItem(i)->setFont(1, sel_font);
+           //   topLevelItem(i)->setFont(1, sel_font);
               topLevelItem(i)->setBackground(2,brb);
-              topLevelItem(i)->setFont(2, sel_font);
+            //  topLevelItem(i)->setFont(2, sel_font);
             }
           else{
-              if(OSInterface::isDir(path + OSInterface::dir_sep + topLevelItem(i)->text(0).toStdString()))
+              std::string file = path + topLevelItem(i)->text(0).toStdString();
+              if((OSInterface::isDir(file)) || (isArch(file)))
                 base_font.setBold(true);
               topLevelItem(i)->setBackground(0,brw);
               topLevelItem(i)->setBackground(1,brw);
               topLevelItem(i)->setBackground(2,brw);
               topLevelItem(i)->setFont(0, base_font);
-              topLevelItem(i)->setFont(1, base_font);
-              topLevelItem(i)->setFont(2, base_font);
               base_font.setBold(false);
-            }
+             // topLevelItem(i)->setFont(1, base_font);
+             // topLevelItem(i)->setFont(2, base_font);
+          }
         }
     }
 }

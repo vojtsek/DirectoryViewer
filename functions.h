@@ -10,5 +10,7 @@ std::string getPath(std::string &);
 std::string getExtension(std::string &);
 bool isArch(std::string &);
 bool isImg(std::string &);
+bool isKnown(std::string &);
+char isValidFn(std::string &);
 
 #endif // FUNCTIONS_H

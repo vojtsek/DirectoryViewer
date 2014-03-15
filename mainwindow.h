@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "mainhandler.h"
 
+
 namespace Ui {
   class MainWindow;
 }
@@ -30,6 +31,7 @@ private:
   void confirm1(std::string, cmd_info_T &);
   void confirm2(std::string, cmd_info_T &);
   void error(std::string &);
+  void exit();
 };
 
 #endif // MAINWINDOW_H
