@@ -3,6 +3,7 @@
 #include "myiconview.h"
 #include "ui_mainwindow.h"
 #include "osinterface.h"
+#include "optiondialog.h"
 #include "openedlisthandle.h"
 #include "stylesheets.h"
 
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
+  QObject::connect(ui->actionOption, SIGNAL(triggered()), this, SLOT(opt()));
   QShortcut *shortcut = new QShortcut(QKeySequence("F10"), this);
   QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(exit()));
   prepareLayout();
@@ -127,7 +129,7 @@ void MainWindow::prepareLayout(){
       QObject::connect(a.second.btt, &QPushButton::clicked, handler, a.second.fnc);
   }
 
-  for(unsigned int i = 0; i < handler->init_count; ++i){
+  for(unsigned int i = 0; i < init_count; ++i){
       handler->list_added();
     }
 
@@ -148,6 +150,18 @@ void MainWindow::exit(){
     QApplication::quit();
 }
 
+void MainWindow::opt(){
+    OptionDialog dial;
+    dial.exec();
+    for(auto a : handler->opened_lists){
+       ui->centralGridLayout->removeItem(a->v_layout);
+       a->in_layout = false;
+    }
+    refreshMainLayout(false);
+    for(auto a : handler->opened_lists)
+        a->content->rebuild();
+}
+
 void MainWindow::handleTab(){
   QWidget *first, *second;
   QWidgetItem *myItem;
@@ -163,7 +177,6 @@ void MainWindow::handleTab(){
       QWidget::setTabOrder(first, second);
       first = second;
     }
-  //for (int i = 0; i < layout->count(); ++i) {
 }
 
 void MainWindow::refreshMainLayout(bool removing){
@@ -180,7 +193,7 @@ void MainWindow::refreshMainLayout(bool removing){
       }catch(std::exception e) {}
   }
   for(auto &a : handler->opened_lists){
-      if(!(col % handler->col_count)){
+      if(!(col % col_count)){
           col = 0;
           ++row;
         }

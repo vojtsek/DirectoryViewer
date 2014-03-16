@@ -32,6 +32,7 @@ private:
   void confirm2(std::string, cmd_info_T &);
   void error(std::string &);
   void exit();
+  void opt();
 };
 
 #endif // MAINWINDOW_H

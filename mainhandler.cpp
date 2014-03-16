@@ -15,31 +15,36 @@
 #include <fstream>
 
 MainHandler::MainHandler(QObject *parent) :
-  QObject(parent), max_lists(4), col_count(2), init_count(2)
+  QObject(parent)
 {
   int param;
   size_in = KB;
   init_dir = OSInterface::getCWD();
+  home_path = OSInterface::getCWD();
   std::string line, option, d;
   try{
-    std::ifstream in("dv.conf");
+    std::ifstream in(home_path + OSInterface::dir_sep + "dv.conf");
     while(1){
         getline(in, line);
         std::stringstream ss(line);
         if(line.empty()) break;
         ss >> option;
-        if(option != "start_directory")
+        if((option != "start_directory") && (option != "home_path")){
           ss >> param;
-        if(option == "start_directory"){
+          if(option == "column_count") col_count = param;
+          else if(option == "max_list_count") max_lists = param;
+          else if(option == "init_list_count") init_count = param;
+          else if(option == "size_in") size_in = param;
+        } else{
             ss >> d;
-            if(d == "cwd")
-              init_dir = OSInterface::getCWD();
-            else
-              init_dir = d;
-          }else if(option == "column_count") col_count = param;
-        else if(option == "max_list_count") max_lists = param;
-        else if(option == "init_list_count") init_count = param;
-        else if(option == "size_in") size_in = param;
+            if(option == "start_directory"){
+                if(d == "cwd")
+                    init_dir = OSInterface::getCWD();
+                else
+                    init_dir = d;
+            }else if(option == "home_path")
+                home_path = d;
+        }
       }
   }catch(std::exception e) { std::cout << e.what() << std::endl; }
 }

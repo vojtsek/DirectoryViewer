@@ -33,8 +33,8 @@ void ArchiveViewer::focusInEvent(QFocusEvent *e){
 }
 
 void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
-    QIcon dir_icon("icons/folder-open-green.png");
-    QIcon base_icon("icons/doc-plain-green.png");
+    QIcon dir_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/folder-open-green.png"));
+    QIcon base_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/doc-plain-green.png"));
   QFont base_font, bold_font, italic_font;
   italic_font.setFamily("Verdana");
   italic_font.setItalic(true);

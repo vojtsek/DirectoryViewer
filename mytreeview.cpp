@@ -17,6 +17,7 @@
 #include <string>
 
 extern int size_in;
+extern std::string home_path;
 
 int MyTreeView::getSelIdx(){
   return currentIndex().row();
@@ -41,9 +42,9 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
     std::cout << e->what() << std::endl;
     return;
   }
-  QIcon dir_icon("icons/folder-open-blue.png");
-  QIcon ar_icon("icons/database.png");
-  QIcon base_icon("icons/doc-plain-blue.png");
+  QIcon dir_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/folder-open-blue.png"));
+  QIcon ar_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/database.png"));
+  QIcon base_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/doc-plain-blue.png"));
   QFont base_font, bold_font, italic_font;
   italic_font.setFamily("Verdana");
   italic_font.setItalic(true);
