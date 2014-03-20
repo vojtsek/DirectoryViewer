@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <fstream>
+#include <QProcess>
 
 #ifdef __unix__
 
@@ -25,6 +26,8 @@ OSInterface::OSInterface()
 {
 }
 
+/* zkontroluje, jestli ma smysl otevirat soubor jako text */
+
 bool OSInterface::isOpenable(std::string path){
     if ((getSize(path) > pow(1024, 2)) && !isArch(path)){
         std::string warn = "File is quite large. Proceed with opening?";
@@ -33,6 +36,10 @@ bool OSInterface::isOpenable(std::string path){
     }
     return true;
 }
+
+/* zpracuje strukturu cmd_info_T, provede kopii souboru
+ * vola prislusnou funkci
+ */
 
 void OSInterface::copy(cmd_info_T &ci){
     for(auto src : ci.source_files){
@@ -51,6 +58,10 @@ void OSInterface::copy(cmd_info_T &ci){
     }
 }
 
+/* zpracuje strukturu cmd_info_T, provede presunuti souboru
+ * vola prislusnou funkci zavisejici na OS
+ */
+
 void OSInterface::move(cmd_info_T &ci){
     for(auto src : ci.source_files){
         for(auto dstf : ci.destination_files[src]){
@@ -68,6 +79,10 @@ void OSInterface::move(cmd_info_T &ci){
     }
 }
 
+/* zpracuje strukturu cmd_info_T, provede prejmenovani souboru
+ * vola prislusnou funkci zavisejici na OS
+ */
+
 void OSInterface::rename(cmd_info_T &ci){
     for(auto src : ci.source_files){
         for(auto dstf : ci.destination_files[src]){
@@ -84,6 +99,10 @@ void OSInterface::rename(cmd_info_T &ci){
         }
     }
 }
+
+/* zpracuje strukturu cmd_info_T, provede smazani souboru
+ * vola prislusnou funkci zavisejici na OS
+ */
 
 void OSInterface::remove(cmd_info_T &ci){
     for(auto src : ci.source_files){
@@ -105,8 +124,14 @@ void OSInterface::remove(cmd_info_T &ci){
 
 }
 
+/* vlastni provedeni kopie souboru
+ * je implementovano standartnimi prostredky c++
+ * a je platformove nezavisle
+ * lisi se jen pripadne vytvoreni adresare
+ */
+
 void OSInterface::doCopy(std::string &src, std::string &dst){
-    if(isDir(src)){
+    if(isDir(src)){ //je to adresar
         OSInterface os;
         os.getDirInfo(src, "*");
 #ifdef __unix__
@@ -116,19 +141,17 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
             if(mkdir(dst.c_str()) == -1)
 #endif
                 throw new OSException(src, strerror(errno));
-        for(auto &a : os.dirs){
+        for(auto &a : os.dirs){ // rekurzivni kopie podadresaru
             std::string nsrc, ndst;
             nsrc = src;
             nsrc.push_back(dir_sep);
-            nsrc.append(a->name); std::string warn = src + "\n is a directory. Remove anyvway? \n";
-            if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-                throw std::exception();
+            nsrc.append(a->name);
             ndst = dst;
             ndst.push_back(dir_sep);
             ndst.append(a->name);
             doCopy(nsrc, ndst);
         }
-    }else{
+    }else{ // kopie souboru pomoci buferu
         std::ifstream file(src, std::ios::in | std::ios::binary | std::ios::ate);
         std::ifstream test(dst, std::ios::in | std::ios::binary | std::ios::ate);
         if(test.tellg() > 0)
@@ -160,6 +183,8 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
     }
 }
 
+/* rekurzivne zjisti soucet velikosti souboru v adresarovem podstromu */
+
 size_t OSInterface::computeDirSize(std::string path){
     if(!isDir(path))
         //return 0;
@@ -176,7 +201,25 @@ size_t OSInterface::computeDirSize(std::string path){
     return size;
 }
 
+/* spusti externi aplikaci
+ * jako parametr preda jmeno souboru
+ * provadi se, pokud je typ souboru znamy
+ */
+
+void OSInterface::openFile(std::string &path){
+    std::string ext(getExtension(path));
+    std::string app(extern_programmes.at(ext));
+    QString program(app.c_str());
+    QStringList arguments;
+    arguments << QString::fromStdString(path);
+
+    QProcess *myProcess = new QProcess();
+    myProcess->start(program, arguments);
+}
+
 #ifdef __unix__
+
+/* absolutni cesta k aktualnimu adresari */
 
 std::string OSInterface::getCWD(){
     char buf[255];
@@ -184,11 +227,17 @@ std::string OSInterface::getCWD(){
     return std::string(buf);
 }
 
+/* vytvoreni slozky */
+
 void OSInterface::create(std::string path){
     if(mkdir(path.c_str(), 0755) == -1)
         throw new OSException(path, strerror(errno));
 }
 
+
+/* provede presunuti souboru
+ * v pripade, ze jde o adresar, vytvori novy a presune podstrom, potom smaze stary
+ */
 
 void OSInterface::doMove(std::string &src, std::string &dst){
     std::stringstream ss;
@@ -217,6 +266,9 @@ void OSInterface::doMove(std::string &src, std::string &dst){
     }
 }
 
+/* provede smazani souboru,
+ * pokud je to adresar, nejprve smaze podstrom */
+
 void OSInterface::doRemove(std::string &src){
     std::stringstream ss;
     if(isDir(src)){
@@ -238,13 +290,19 @@ void OSInterface::doRemove(std::string &src){
     }
 }
 
+/* cesta do korene */
+
 std::string OSInterface::getPrefix(){ return "/"; }
+
+/* vrati velikost souboru v bytech */
 
 std::size_t OSInterface::getSize(std::string p){
     struct stat *finfo = new struct stat();
     lstat(p.c_str(), finfo);
     return finfo->st_size;
 }
+
+/* urci, je-li soubor predany parametrem adresar */
 
 bool OSInterface::isDir(std::string path){
     DIR *dir;
@@ -255,31 +313,11 @@ bool OSInterface::isDir(std::string path){
     return true;
 }
 
-void OSInterface::openFile(std::string &path){
-    if(getExtension(path) == "pdf"){
-        pid_t pid;
-        switch(pid = fork()){
-        default:
-            //childs.push_back(pid);
-            break;
-        case 0:
-            std::string cmd("/bin/mupdf");
-            execl(cmd.c_str(), getBasename(cmd).c_str(), path.c_str());
-            break;
-        }
-    }else if(getExtension(path) == "avi"){
-        pid_t pid;
-        switch(pid = fork()){
-        default:
-            //childs.push_back(pid);
-            break;
-        case 0:
-            std::string cmd("/bin/vlc");
-            execl(cmd.c_str(), getBasename(cmd).c_str(), path.c_str());
-            break;
-        }
-    }
-}
+/* ziska informace o souborech v adresari
+ * projde adresar a ziska info o jednotlivych souborech,
+ * to pak ulozi do vectoru dirs
+ * nakonec vektor seradi, adresare na zacatek, protoze obsah musi korespondovat se zobrazenym seznamem
+ */
 
 void OSInterface::getDirInfo(std::string path, std::string pattern){
     DIR *dir;
@@ -363,6 +401,7 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
 #include <cstring>
 #include <stdlib.h>
 
+/* vrati cestu do aktualniho adresare */
 
 std::string OSInterface::getCWD(){
     char buf[255];
@@ -370,11 +409,15 @@ std::string OSInterface::getCWD(){
     return std::string(buf);
 }
 
+/* vytvoreni adresare */
+
 void OSInterface::create(std::string path){
     std::wstring p(path.begin(), path.end());
     if(!CreateDirectory(p.c_str(), NULL))
         throw new OSException(path, strerror(errno));
 }
+
+/* provede presunuti souboru */
 
 void OSInterface::doMove(std::string &src, std::string &dst){
     std::wstring oldf, newf;
@@ -385,6 +428,9 @@ void OSInterface::doMove(std::string &src, std::string &dst){
     if(!MoveFile(oldf.c_str(), newf.c_str()))
         throw new OSException(ss.str(), strerror(errno));
 }
+
+/* provede smazani souboru,
+ * pokud je to adresar, nejprve smaze podstrom */
 
 void OSInterface::doRemove(std::string &src){
     std::wstring oldf;
@@ -412,27 +458,24 @@ void OSInterface::doRemove(std::string &src){
     }
 }
 
+/* cesta do korene */
+
 std::string OSInterface::getPrefix(){ return "C:\\"; }
+
+/* vrati velikost souboru v bytech */
 
 std::size_t OSInterface::getSize(std::string p){
     std::size_t size = 0;
     if(isDir(p)){
         return 0;
     }
-    /*
-        OSInterface os;
-        os.getDirInfo(p, "*");
-        for(auto &a : os.dirs){
-            size += getSize(p + a->name);
-        }
-        return size;
-    }else{
-    */
     std::ifstream f(p, std::ios::binary | std::ios::ate);
     size = f.tellg();
     f.close();
     return size;
 }
+
+/* urci, je-li soubor predany parametrem adresar */
 
 bool OSInterface::isDir(std::string path){
 
@@ -443,6 +486,12 @@ bool OSInterface::isDir(std::string path){
         return true;
     return false;
 }
+
+/* ziska informace o souborech v adresari
+ * projde adresar a ziska info o jednotlivych souborech,
+ * to pak ulozi do vectoru dirs
+ * nakonec vektor seradi, adresare na zacatek, protoze obsah musi korespondovat se zobrazenym seznamem
+ */
 
 void OSInterface::getDirInfo(std::string path, std::string pattern){
     WIN32_FIND_DATA data;
@@ -455,7 +504,7 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
     HANDLE hFile = FindFirstFile(ppath.c_str(), &data);
 
     if  ((hFile == INVALID_HANDLE_VALUE) && (GetLastError() != ERROR_FILE_NOT_FOUND)) return;
-        //throw new OSException(path, "Failed to open dir.");
+    //throw new OSException(path, "Failed to open dir.");
     std::string name, tmpname;
     while(FindNextFile(hFile, &data) != 0 || GetLastError() != ERROR_NO_MORE_FILES)
     {

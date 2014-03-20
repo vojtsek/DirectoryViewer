@@ -53,16 +53,16 @@ public:
   bool is_focused, marked, recursive;
   std::string path, pattern;
   OSInterface *osi;
-  int w, col_width;
+  int w, col_width, index;
   virtual std::string getSelected() = 0;
   virtual void rebuild(int idx = 0) = 0;
   virtual int getSelIdx() = 0;
+  virtual int getIdxOf(std::string &) = 0;
   virtual void setFocus() = 0;
   virtual void unFocus() = 0;
   virtual void focus() = 0;
   virtual void mark(bool) = 0;
   virtual void die() = 0;
-  virtual QWidget *getContent() = 0;
   MyViewType(std::string p, std::string pat): is_focused(false), marked(false), path(p), pattern(pat) {
     osi = nullptr;
   }

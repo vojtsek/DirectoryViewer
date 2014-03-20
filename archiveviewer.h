@@ -28,11 +28,11 @@ public:
   virtual void rebuild(int idx = 0);
   virtual std::string getSelected();
   virtual int getSelIdx();
+  virtual int getIdxOf(std::string &) { return 0; }
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
-  virtual QWidget *getContent();
   void readArch();
   void buildTree(QTreeWidgetItem *, int lvl);
   virtual void die();

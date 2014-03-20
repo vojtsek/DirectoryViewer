@@ -2,6 +2,9 @@
 #define FUNCTIONS_H
 
 #include <string>
+#include <map>
+
+extern std::map<std::string, std::string> extern_programmes;
 
 void repairPath(std::string &);
 bool matchExpression(std::string &, std::string &);

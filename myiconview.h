@@ -19,7 +19,8 @@ public:
       setSelectionMode( QAbstractItemView::SingleSelection );
       setEditTriggers(QAbstractItemView::EditTriggers(0));
       w = width();
-      col_width = 80;
+      col_width = 100;
+      index = idx;
       rebuild(idx);
     }
  // MyTreeView(const MyTreeView&);
@@ -30,7 +31,6 @@ public:
   virtual void resizeEvent(QResizeEvent *e);
   virtual void rebuild(int idx = 0);
   std::string getSelected();
-  virtual QWidget *getContent();
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
@@ -38,6 +38,7 @@ public:
   void changeSelection();
   void updateSelection();
   virtual int getSelIdx();
+  virtual int getIdxOf(std::string &);
   virtual void die();
 signals:
   void focused();

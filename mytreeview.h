@@ -17,6 +17,7 @@ public:
     setColumnCount(3);
     recursive = rec;
     setSelectionBehavior(QAbstractItemView::SelectRows);
+    index = idx;
     rebuild(idx);
   }
 //  MyTreeView(const MyTreeView&);
@@ -28,12 +29,12 @@ public:
   virtual void rebuild(int idx = 0);
   virtual std::string getSelected();
   virtual int getSelIdx();
+  virtual int getIdxOf(std::string &);
   virtual void unFocus();
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
-  virtual QWidget *getContent();
-  void changeSelection(int);
+  void changeSelection();
   void updateSelection();
   void buildTree(std::string, QTreeWidgetItem *, bool top);
   virtual void die();

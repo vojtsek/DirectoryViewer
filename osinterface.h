@@ -8,6 +8,8 @@
 #include <string>
 #include <QDate>
 
+extern std::map<std::string, std::string> extern_programmes;
+
 typedef struct {
   std::string name, type_name, ext_name, mod_time, perms;
   int type;

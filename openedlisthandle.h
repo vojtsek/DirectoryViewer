@@ -32,13 +32,14 @@
 
 class MyTreeView;
 class MyIconView;
+extern std::map<std::string, std::string> extern_programmes;
 
 class OpenedListHandle: public QWidget{
   Q_OBJECT
 public:
   std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
   std::vector<MyViewType *> to_del;
-  std::vector<pid_t> childs;
+  std::string last_dir;
   QVBoxLayout *v_layout, *v_layout2;
   QHBoxLayout *h_layout1, *h_layout2;
   QGridLayout *g_layout;
@@ -51,13 +52,12 @@ public:
   bool in_layout;
   std::string path;
   enum {TREE, LIST, ICON, VIEW, ARCHIVE};
-  int view_type;
+  int view_type, last_layout;
   unsigned int size_in;
   enum {B, KB, MB, GB};
 
   OpenedListHandle() { initLayout(".");}
   OpenedListHandle(std::string, unsigned int, QWidget *parent = 0);
- // OpenedListHandle(const OpenedListHandle &, QWidget *parent = 0);
   void delGraphics();
   void changeLayout(int);
   void highlightBtt();

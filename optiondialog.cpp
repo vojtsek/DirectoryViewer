@@ -8,6 +8,10 @@
 extern int size_in, max_lists, col_count, init_count;
 extern std::string init_dir;
 
+/* konstruktor
+ * vytvori dialog umoznujici nastaveni
+ */
+
 OptionDialog::OptionDialog()
 {
     std::stringstream ss;
@@ -47,6 +51,10 @@ OptionDialog::OptionDialog()
     layout->addWidget(save_btt, 5, 2);
     setLayout(layout);
 }
+
+/* slot volany pri ulozeni
+ * zpracuje udaje a ulozi do souboru
+ */
 
 void OptionDialog::save(){
     size_in = combo->currentIndex();

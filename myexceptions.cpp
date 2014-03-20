@@ -5,12 +5,14 @@
 #include <string>
 #include <iostream>
 
+/* rodicovska trida pro implementaci vyjimek */
+
 const char *MyException::what(){
-  return err.c_str();
+    return err.c_str();
 }
 
 void MyException::process(){
-  std::cout << what() << std::endl;
-  MyDialog::MsgBox(err);
+    std::cout << what() << std::endl;
+    MyDialog::MsgBox(err);
 }
 

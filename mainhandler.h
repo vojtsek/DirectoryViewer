@@ -3,11 +3,13 @@
 
 #include "types.h"
 #include "openedlisthandle.h"
+#include <map>
 #include <QObject>
 #include <string>
 
 extern int size_in, max_lists, col_count, init_count;
 extern std::string init_dir, home_path;
+extern std::map<std::string, std::string> extern_programmes;
 class OpenedListHandle;
 
 class MainHandler : public QObject
@@ -18,8 +20,8 @@ public:
   static enum {B, KB, MB, GB} sz;
   std::map<Qt::Key, ButtonHandle<MainHandler>> tool_btts;
   std::vector<OpenedListHandle *> opened_lists;
-  QGridLayout *main_grid;
   explicit MainHandler(QObject *parent = 0);
+
 signals:
   void ch_list(bool);
   void confirm1(std::string, cmd_info_T &);

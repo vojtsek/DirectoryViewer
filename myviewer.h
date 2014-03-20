@@ -25,8 +25,8 @@ public:
   virtual void resizeEvent(QResizeEvent *e);
   virtual void rebuild(int idx = 0);
   std::string getSelected();
-  virtual QWidget *getContent();
   virtual void unFocus();
+  virtual int getIdxOf(std::string &) { return 0;}
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
