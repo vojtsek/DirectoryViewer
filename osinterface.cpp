@@ -29,11 +29,13 @@ OSInterface::OSInterface()
 /* zkontroluje, jestli ma smysl otevirat soubor jako text */
 
 bool OSInterface::isOpenable(std::string path){
-    if ((getSize(path) > pow(1024, 2)) && !isArch(path)){
+    if (getSize(path) > pow(1024, 2)){
         std::string warn = "File is quite large. Proceed with opening?";
         if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
             return false;
     }
+    if(isArch(path))
+        return false;
     return true;
 }
 

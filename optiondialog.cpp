@@ -4,9 +4,12 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+#include <string>
+#include <map>
 
 extern int size_in, max_lists, col_count, init_count;
 extern std::string init_dir;
+extern std::map<std::string, std::string> extern_programmes;
 
 /* konstruktor
  * vytvori dialog umoznujici nastaveni
@@ -15,7 +18,7 @@ extern std::string init_dir;
 OptionDialog::OptionDialog()
 {
     std::stringstream ss;
-    QGridLayout *layout = new QGridLayout();
+    layout = new QGridLayout();
     combo = new QComboBox();
     ss << col_count;
     le_col_count = new QLineEdit(QString::fromStdString(ss.str()));
@@ -29,8 +32,6 @@ OptionDialog::OptionDialog()
     ss.clear();
     ss << max_lists;
     le_max_lists = new QLineEdit(QString::fromStdString(ss.str()));
-    QPushButton *save_btt = new QPushButton("Save");
-    QObject::connect(save_btt, SIGNAL(clicked()), this, SLOT(save()));
     combo->addItem("B");
     combo->addItem("KB");
     combo->addItem("MB");
@@ -48,8 +49,49 @@ OptionDialog::OptionDialog()
     layout->addWidget(new QLabel("Start directory:"), 4, 0);
     layout->addWidget(le_dir, 4, 1);
 
-    layout->addWidget(save_btt, 5, 2);
+    QLineEdit *e, *app;
+    int row = 5;
+    for(auto a : extern_programmes){
+        e = new QLineEdit(QString::fromStdString(a.first));
+        app = new QLineEdit(QString::fromStdString(a.second));
+        ext_apps.emplace(e, app);
+        layout->addWidget(e, row, 0);
+        layout->addWidget(app, row, 1);
+        ++row;
+    }
+
+    QPushButton *save_btt = new QPushButton("Save");
+    QPushButton *add_btt = new QPushButton("Add");
+    QObject::connect(add_btt, SIGNAL(clicked()), this, SLOT(addRow()));
+    QObject::connect(save_btt, SIGNAL(clicked()), this, SLOT(save()));
+    layout->addWidget(add_btt, row++, 0);
+    layout->addWidget(save_btt, row, 2);
     setLayout(layout);
+}
+
+/*
+ *
+ */
+
+void OptionDialog::addRow(){
+    QLineEdit *e = new QLineEdit();
+    QLineEdit *app = new QLineEdit();
+    int count = 5;
+    QLayoutItem *it = layout->itemAtPosition(ext_apps.size() + count, 0); //ty plus jsou kvuli predchozim polozkam.
+    layout->removeItem(it);
+    delete it;
+    it = layout->itemAtPosition(ext_apps.size() + 1 + count, 2);
+    layout->removeItem(it);
+    delete it->widget();
+    ext_apps.emplace(e, app);
+    layout->addWidget(e, ext_apps.size() - 1 + count, 0);
+    layout->addWidget(app, ext_apps.size() -1 + count, 1);
+    QPushButton *save_btt = new QPushButton("Save");
+    QPushButton *add_btt = new QPushButton("Add");
+    QObject::connect(add_btt, SIGNAL(clicked()), this, SLOT(addRow()));
+    QObject::connect(save_btt, SIGNAL(clicked()), this, SLOT(save()));
+    layout->addWidget(add_btt, ext_apps.size() + count, 0);
+    layout->addWidget(save_btt, ext_apps.size() + 1 + count, 2);
 }
 
 /* slot volany pri ulozeni
@@ -69,6 +111,12 @@ void OptionDialog::save(){
     out << "init_list_count " << init_count << std::endl;
     out << "start_directory " << init_dir << std::endl;
     out.close();
+    out.open("extern.conf");
+    for(auto a : ext_apps){
+        if(!a.first->text().toStdString().empty() && ! a.second->text().toStdString().empty())
+            out << a.first->text().toStdString() << " " << a.second->text().toStdString() << std::endl;
+    }
+    out.close();
     close();
 }
 
@@ -78,4 +126,8 @@ OptionDialog::~OptionDialog(){
     delete le_col_count;
     delete le_max_lists;
     delete le_dir;
+    for(auto a : ext_apps){
+        delete a.first;
+        delete a.second;
+    }
 }
