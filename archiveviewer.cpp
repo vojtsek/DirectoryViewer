@@ -51,7 +51,7 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
     char last;
     int pos;
     try{
-        prefix = name = items.at(idx);
+        tmp = prefix = name = items.at(idx);
     }catch(std::exception e) { return; }
     QTreeWidgetItem *item;
     //std::stringstream ss;
@@ -71,13 +71,18 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
         try{
             name = items.at(idx);
         }catch(std::exception e) { break; }
-        if(name.find(prefix) != 0) break; // narazil na soubor, ktery uz nepatri pod tuto polozku - neobsahuje prefix (na zacatku)
+        if((name.find('/') != std::string::npos) && (name.find(prefix) != 0)) break; // narazil na soubor, ktery uz nepatri pod tuto polozku - neobsahuje prefix (na zacatku)
         last = name[name.size() - 1];
         if(name != prefix)
             name = name.substr(prefix.size(), name.size() - prefix.size() - 1);
         if(name.find('/') != std::string::npos) continue; // mezi prefixem a souborem je netrivialni cesta - tato polozka bude pripojena rekurzivne pozdeji
         name.push_back(last);
-        buildTree(item, idx); // vola se pro syny
+        if((name.find(prefix) == 0) | tmp[tmp.size() - 1] == '/')
+            buildTree(item, idx); // vola se pro syny
+        else{
+            buildTree(nullptr, idx);
+            break;
+        }
     }
     if(it != nullptr){
         it->setIcon(0, dir_icon);

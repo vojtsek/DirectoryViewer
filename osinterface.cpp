@@ -29,13 +29,13 @@ OSInterface::OSInterface()
 /* zkontroluje, jestli ma smysl otevirat soubor jako text */
 
 bool OSInterface::isOpenable(std::string path){
+    if(isArch(path))
+        return false;
     if (getSize(path) > pow(1024, 2)){
         std::string warn = "File is quite large. Proceed with opening?";
         if(QMessageBox::question(nullptr, "Open file", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
             return false;
     }
-    if(isArch(path))
-        return false;
     return true;
 }
 
@@ -498,6 +498,7 @@ bool OSInterface::isDir(std::string path){
 void OSInterface::getDirInfo(std::string path, std::string pattern){
     WIN32_FIND_DATA data;
     repairPath(path);
+
     path.append("*");
     std::wstring ppath, whole_name;
     ppath.assign(path.begin(), path.end());
