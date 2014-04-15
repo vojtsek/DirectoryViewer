@@ -6,6 +6,7 @@
 #include "optiondialog.h"
 #include "openedlisthandle.h"
 #include "stylesheets.h"
+#include "types.h"
 
 #include <QPushButton>
 #include <QShortcut>
@@ -129,6 +130,7 @@ void MainWindow::error(std::string &err){
  */
 
 void MainWindow::prepareLayout(){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     ui->centralGridLayout->setHorizontalSpacing(20);
     QObject::connect(handler, &MainHandler::ch_list, this, &MainWindow::refreshMainLayout);
     QObject::connect(handler, &MainHandler::confirm1, this, &MainWindow::confirm1);
@@ -151,7 +153,7 @@ void MainWindow::prepareLayout(){
         QObject::connect(a.second.btt, &QPushButton::clicked, handler, a.second.fnc);
     }
 
-    for(unsigned int i = 0; i < init_count; ++i){
+    for(unsigned int i = 0; i < data_instance->init_count; ++i){
         handler->list_added();
     }
 
@@ -223,6 +225,7 @@ void MainWindow::handleTab(){
  */
 
 void MainWindow::refreshMainLayout(bool removing){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     int row, col;
     unsigned int count;
     row = col = count = 0;
@@ -250,13 +253,13 @@ void MainWindow::refreshMainLayout(bool removing){
         if(!a->in_layout){
             a->in_layout = true;
             if((count == handler->opened_lists.size()) && row) //pridava posledni - muze se roztahnout do vice sloupcu
-                ui->centralGridLayout->addLayout(a->v_layout, row, col, 1, col_count - col);
+                ui->centralGridLayout->addLayout(a->v_layout, row, col, 1, data_instance->col_count - col);
             else
                 ui->centralGridLayout->addLayout(a->v_layout, row, col, 1, 1);
-            if(handler->opened_lists.size() < col_count)
+            if(handler->opened_lists.size() < data_instance->col_count)
                 a->tb2->setMaximumWidth(ui->centralWidget->width() / handler->opened_lists.size());
             else
-                a->tb2->setMaximumWidth(ui->centralWidget->width() / col_count);
+                a->tb2->setMaximumWidth(ui->centralWidget->width() / data_instance->col_count);
 
             a->content->setFocus();
             QObject::connect(a, &OpenedListHandle::updated, this, &MainWindow::handleTab);
@@ -265,7 +268,7 @@ void MainWindow::refreshMainLayout(bool removing){
             else if(a->view_type == a->ICON)
                 QObject::connect((MyIconView *)a->content, &MyIconView::tab, this, &MainWindow::handleTab);
         }
-        if(!(++col % col_count)){
+        if(!(++col % data_instance->col_count)){
             col = 0;
             ++row;
         }

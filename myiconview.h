@@ -8,13 +8,13 @@ class MyIconView : public QTableWidget, public MyViewType
 {
   Q_OBJECT
 public:
-  explicit MyIconView(QWidget *p = 0): QTableWidget(p), MyViewType("","") {
+  explicit MyIconView(OSInterface *osi, QWidget *p = 0): QTableWidget(p), MyViewType("","", osi) {
     setSelectionBehavior( QAbstractItemView::SelectItems );
     setSelectionMode( QAbstractItemView::SingleSelection );
     setEditTriggers(QAbstractItemView::EditTriggers(0));
     w = width();
   }
-  MyIconView(std::string pa, std::string pat, int idx = 0, QWidget *p = 0): QTableWidget(p), MyViewType(pa, pat) {
+  MyIconView(std::string pa, std::string pat, OSInterface *osi, int idx = 0, QWidget *p = 0): QTableWidget(p), MyViewType(pa, pat, osi) {
       setSelectionBehavior( QAbstractItemView::SelectItems );
       setSelectionMode( QAbstractItemView::SingleSelection );
       setEditTriggers(QAbstractItemView::EditTriggers(0));
@@ -23,7 +23,6 @@ public:
       index = idx;
       rebuild(idx);
     }
- // MyTreeView(const MyTreeView&);
   virtual ~MyIconView() {}
   virtual void focusInEvent(QFocusEvent *);
   virtual void focusOutEvent(QFocusEvent *);
@@ -35,8 +34,10 @@ public:
   virtual void setFocus();
   virtual void focus();
   virtual void mark(bool);
+  void addItem(int &, int &, dirEntryT *);
   void changeSelection();
   void updateSelection();
+  void build(int &);
   virtual int getSelIdx();
   virtual int getIdxOf(std::string &);
   virtual void die();
@@ -46,6 +47,7 @@ signals:
   void unfocused();
   void stepup();
   void tab();
+  void refresh();
   void chlayout();
 };
 

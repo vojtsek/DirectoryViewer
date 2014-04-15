@@ -32,72 +32,75 @@
 
 class MyTreeView;
 class MyIconView;
-extern std::map<std::string, std::string> extern_programmes;
 
 class OpenedListHandle: public QWidget{
-  Q_OBJECT
+    Q_OBJECT
 public:
-  std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
-  std::vector<MyViewType *> to_del;
-  std::string last_dir;
-  QVBoxLayout *v_layout, *v_layout2;
-  QHBoxLayout *h_layout1, *h_layout2;
-  QGridLayout *g_layout;
-  MyLineEdit *le1;
-  ButtonHandle<OpenedListHandle> *up_btt;
-  QLineEdit *le2;
-  QLabel *lbl, *lbl2, *lbl3;
-  MyViewType *content;
-  QToolBar *tb, *tb2;
-  bool in_layout;
-  std::string path;
-  enum {TREE, LIST, ICON, VIEW, ARCHIVE};
-  int view_type, last_layout;
-  unsigned int size_in;
-  enum {B, KB, MB, GB};
+    OSInterface *os;
+    std::map<Qt::Key, ButtonHandle<OpenedListHandle>> tool_btts;
+    std::vector<MyViewType *> to_del;
+    std::string last_dir;
+    QVBoxLayout *v_layout, *v_layout2;
+    QHBoxLayout *h_layout1, *h_layout2;
+    QGridLayout *g_layout;
+    MyLineEdit *le1;
+    ButtonHandle<OpenedListHandle> *up_btt;
+    QLineEdit *le2;
+    QLabel *lbl, *lbl2, *lbl3;
+    MyViewType *content;
+    QToolBar *tb, *tb2;
+    bool in_layout;
+    std::string path;
+    enum {TREE, LIST, ICON, VIEW, ARCHIVE};
+    int view_type, last_layout;
+    enum {B, KB, MB, GB};
 
-  OpenedListHandle() { initLayout(".");}
-  OpenedListHandle(std::string, unsigned int, QWidget *parent = 0);
-  void delGraphics();
-  void changeLayout(int);
-  void highlightBtt();
-  void clean();
-  void updateLbl();
-  void processItem(std::string);
-  template <typename T>
-  void connectSignals(){
-    if(typeid(T) == typeid(MyTreeView)){
-        QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
-        QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
-      }else if(typeid(T) == typeid(MyIconView)){
-        QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
-      }
-    QObject::connect((T *)content, SIGNAL(rebuilded()), this, SLOT(rebuildContent()));
-    QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
-    QObject::connect((T *)content, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
-    QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
-  }
+    OpenedListHandle() { initLayout(".");}
+    OpenedListHandle(std::string, QWidget *parent = 0);
+    void delGraphics();
+    void changeLayout(int);
+    void highlightBtt();
+    void getFullPath(QTreeWidgetItem *, std::string&);
+    void clean();
+    void updateLbl();
+    void processItem(std::string);
+    template <typename T>
+    void connectSignals(){
+        if(typeid(T) == typeid(MyTreeView)){
+            QObject::connect((T *)content, SIGNAL(itemExpanded(QTreeWidgetItem *)), this, SLOT(itemExpanded(QTreeWidgetItem *)));
+            QObject::connect((T *)content, SIGNAL(itemActivated(QTreeWidgetItem *, int)), this, SLOT(itemActivated(QTreeWidgetItem*,int)));
+        }else if(typeid(T) == typeid(MyIconView)){
+            QObject::connect((T *)content, SIGNAL(itemActivated(QTableWidgetItem *)), this, SLOT(itemActivated(QTableWidgetItem *)));
+        }
+        QObject::connect((T *)content, SIGNAL(rebuilded()), this, SLOT(rebuildContent()));
+        QObject::connect((T *)content, SIGNAL(chlayout()), this, SLOT(chlayout()));
+        QObject::connect((T *)content, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
+        QObject::connect((T *)content, &T::stepup, this, &OpenedListHandle::stepUp);
+        QObject::connect((T *)content, &T::refresh, this, &OpenedListHandle::refresh);
+    }
 
-  void initLayout(std::string);
-  virtual ~OpenedListHandle();
+    void initLayout(std::string);
+    virtual ~OpenedListHandle();
 
 signals:
-  void updated();
+    void updated();
+    void refreshed(OpenedListHandle *);
 public slots:
-  void toTree();
-  void toList();
-  void toIcon();
-  void chlayout();
-  void stepUp();
-  void patternChanged();
-  void pathChanged();
-  void setSelection(bool);
-  void rebuildContent();
-  //void itemPressed(QTreeWidgetItem *item);
-  void itemExpanded(QTreeWidgetItem *item);
-  void selectionChanged();
-  void itemActivated(QTreeWidgetItem *item, int col );
-  void itemActivated(QTableWidgetItem *item);
+    void toTree();
+    void toList();
+    void toIcon();
+    void chlayout();
+    void stepUp();
+    void refresh();
+    void patternChanged();
+    void pathChanged();
+    void setSelection(bool);
+    void rebuildContent();
+    //void itemPressed(QTreeWidgetItem *item);
+    void itemExpanded(QTreeWidgetItem *item);
+    void selectionChanged();
+    void itemActivated(QTreeWidgetItem *item, int col );
+    void itemActivated(QTableWidgetItem *item);
 };
 
 

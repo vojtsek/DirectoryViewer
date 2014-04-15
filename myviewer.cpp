@@ -15,25 +15,25 @@
 /* vrati index oznaceneho prvku, v tomto pripade je to hodnota ulozena pri vzniku, kvuli navratu */
 
 int MyViewer::getSelIdx(){
-  return idx;
+    return idx;
 }
 
 /* stane se neviditelny, zrusen bude pozdeji */
 
 void MyViewer::die(){
-  setFocusPolicy(Qt::NoFocus);
-  setFixedSize(0, 0);
+    setFocusPolicy(Qt::NoFocus);
+    setFixedSize(0, 0);
 }
 
 /* osetreni ziskani focusu */
 
-void MyViewer::focusInEvent(QFocusEvent *e){
-  emit(focused());
-  focus();
+void MyViewer::focusInEvent(QFocusEvent *){
+    emit(focused());
+    focus();
 }
 
-void MyViewer::focusOutEvent(QFocusEvent *e){
-  unFocus();
+void MyViewer::focusOutEvent(QFocusEvent *){
+    unFocus();
 }
 
 void MyViewer::resizeEvent(QResizeEvent *e)
@@ -49,69 +49,71 @@ void MyViewer::setFocus(){ QWidget::setFocus(); }
  * cursor nastavi na zacatek
  */
 
-void MyViewer::rebuild(int idx){
+void MyViewer::rebuild(int){
     if(image){
         setStyleSheet(QString::fromStdString("QPlainTextEdit {background: #000 url(" + path + ") no-repeat center; }"));
         return;
     }
-  std::ifstream in(path);
-  std::string line;
-  setReadOnly(true);
-  while(in.good()){
-      getline(in, line);
-      appendPlainText(QString::fromStdString(line));
+    std::ifstream in(path);
+    std::string line;
+    setReadOnly(true);
+    while(in.good()){
+        getline(in, line);
+        appendPlainText(QString::fromStdString(line));
     }
-  QTextCursor cursor(textCursor());
-  cursor.movePosition(QTextCursor::Start);
-  setTextCursor(cursor);
+    QTextCursor cursor(textCursor());
+    cursor.movePosition(QTextCursor::Start);
+    setTextCursor(cursor);
 }
 
 std::string MyViewer::getSelected(){
-  return "";
+    return "";
 }
 
 /* osetreni stisku klavesy */
 
 void MyViewer::keyPressEvent(QKeyEvent *e){
-  if(e->key() == Qt::Key_M)
-    mark(!marked);
-  else if(e->key() == Qt::Key_Backspace){
-      emit(chlayout());
-      setFocus();
+    if(e->key() == Qt::Key_M)
+        mark(!marked);
+    else if(e->key() == Qt::Key_Backspace){
+        emit(chlayout());
+        setFocus();
     }else if(e->key() == Qt::Key_F1)
-    emit(chlayout());
-  else if(e->key() == Qt::Key_Tab){
-      QWidget::keyPressEvent(e);
-  }
- QPlainTextEdit::keyPressEvent(e);
+        emit(chlayout());
+    else if(e->key() == Qt::Key_F11)
+        emit(refresh());
+    else if(e->key() == Qt::Key_Tab){
+        QWidget::keyPressEvent(e);
+    }
+    QPlainTextEdit::keyPressEvent(e);
 }
 
 /* zmena vzhledu pri ziskani focusu */
 
 void MyViewer::focus(){
-  is_focused = true;
-  //setStyleSheet(focused_list_style);
-  if(image)
-      setStyleSheet(QString::fromStdString("QPlainTextEdit {background: #000 url(" + path + ") no-repeat center; }"));
+    is_focused = true;
+    //setStyleSheet(focused_list_style);
+    if(image)
+        setStyleSheet(QString::fromStdString("QPlainTextEdit {background: #000 url(" + path + ") no-repeat center; }"));
 }
 
 /* zmena vzhledu pri oznaceni */
 
 void MyViewer::mark(bool m){
-  if(m){ //oznacit
-      marked = true;
-      setStyleSheet(marked_list_style);
+    if(m){ //oznacit
+        marked = true;
+        setStyleSheet(marked_list_style);
     }else{ //odznacit
-      marked = false;
-      setStyleSheet(focused_list_style);
+        marked = false;
+        setStyleSheet(focused_list_style);
     }
 }
 
 /* zmena vzhledu pri ztrate focusu */
 
 void MyViewer::unFocus(){
-  is_focused = false;
-  if(!marked){
-    setStyleSheet(unfocused_list_style);
-  }else mark(true);
+    is_focused = false;
+    if(!marked){
+        setStyleSheet(unfocused_list_style);
+    }else mark(true);
 }

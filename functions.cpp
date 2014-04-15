@@ -7,7 +7,7 @@
 */
 
 void repairPath(std::string &path){
-    int pos;
+    unsigned int pos;
     std::string doubled;
     doubled.push_back(OSInterface::dir_sep);
     doubled.push_back(OSInterface::dir_sep);
@@ -77,12 +77,26 @@ bool isImg(std::string &path){
     return ((ext == "png") || (ext == "jpg") || (ext == "gif"));
 }
 
+void addSizeInfo(std::stringstream &ss){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+    if(data_instance->size_in == data_instance->B)
+        ss << " B";
+    if(data_instance->size_in == data_instance->KB)
+        ss << " KB";
+    if(data_instance->size_in == data_instance->MB)
+        ss << " MB";
+    if(data_instance->size_in == data_instance->GB)
+        ss << " GB";
+}
+
 /* soubor ma typ, ktery umi otevrit v externim programu */
 
 bool isKnown(std::string &path){
     std::string ext(getExtension(path));
-    auto it = extern_programmes.find(ext);
-    if(it != extern_programmes.end())
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+
+    auto it = data_instance->extern_programmes.find(ext);
+    if(it != data_instance->extern_programmes.end())
         return true;
     return false;
 }
@@ -90,7 +104,7 @@ bool isKnown(std::string &path){
 /* pokud jmeno souboru obsahuje nepovolene znaky, vrati prvni z techto znaku */
 
 char isValidFn(std::string &path){
-    std::string forbidden(" <>|\:()&;#?*");
+    std::string forbidden(" <>|\\:()&;#?*");
     forbidden.push_back(OSInterface::dir_sep);
     for(char &a : forbidden){
         if(path.find(a) != std::string::npos)

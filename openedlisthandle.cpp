@@ -23,7 +23,6 @@
 #include <QToolBar>
 #include <QMessageBox>
 #include <QModelIndex>
-#include <QThread>
 #include <QObject>
 #include <map>
 #include <set>
@@ -78,15 +77,15 @@ void OpenedListHandle::changeLayout(int type){
         QObject::disconnect((MyTreeView *)content, 0, this, 0);
     switch (type) {
     case TREE:
-        content = new MyTreeView(path, le2->text().toStdString(), true, content->getSelIdx());
+        content = new MyTreeView(path, le2->text().toStdString(), true, os, content->getSelIdx());
         h_layout2->addWidget((MyTreeView *)content);
         break;
     case LIST:
-        content = new MyTreeView(path, le2->text().toStdString(), false, content->getSelIdx());
+        content = new MyTreeView(path, le2->text().toStdString(), false, os, content->getSelIdx());
         h_layout2->addWidget((MyTreeView *)content);
         break;
     case ICON:
-        content = new MyIconView(path, le2->text().toStdString(), content->getSelIdx());
+        content = new MyIconView(path, le2->text().toStdString(), os, content->getSelIdx());
         h_layout2->addWidget((MyIconView *) content);
         break;
     case VIEW:
@@ -146,6 +145,10 @@ void OpenedListHandle::chlayout(){
         changeLayout(last_layout);
 }
 
+void OpenedListHandle::refresh(){
+    emit(refreshed(this));
+}
+
 /* slot, zmena vzoru */
 
 void OpenedListHandle::patternChanged(){
@@ -158,7 +161,7 @@ void OpenedListHandle::patternChanged(){
  */
 
 void OpenedListHandle::stepUp(){
-    int it;
+    unsigned int it;
     std::string cutted, cont = le1->text().toStdString();
     if(cont == OSInterface::getPrefix()) return;
     cutted = cont.substr(0, cont.size() - 1);
@@ -193,7 +196,7 @@ void OpenedListHandle::pathChanged(){
 
 void OpenedListHandle::setSelection(bool in){
     if(in){
-        int it;
+        unsigned int it;
         std::string cont = le1->text().toStdString();
         if(cont == OSInterface::getPrefix()) return;
         if((it = cont.find_last_of(OSInterface::dir_sep)) == std::string::npos) return;
@@ -237,7 +240,7 @@ void OpenedListHandle::processItem(std::string new_path){
 
 /* slot zajistujici zachyceni aktivace */
 
-void OpenedListHandle::itemActivated(QTableWidgetItem *item){
+void OpenedListHandle::itemActivated(QTableWidgetItem *){
     std::string new_path = content->getSelected();
     processItem(new_path);
 }
@@ -250,7 +253,7 @@ void OpenedListHandle::selectionChanged(){
 
 /* slot zajistujici zachyceni aktivace */
 
-void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int col){
+void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int){
     if(view_type == TREE){
         item->setExpanded(!item->isExpanded());
     }else{
@@ -259,12 +262,12 @@ void OpenedListHandle::itemActivated(QTreeWidgetItem *item, int col){
     }
 }
 
-/* pri rozbaleni polozky ve stromu
- * pro jeji deti vypocita dalsi patra podstromu
+/*
+ * ve vystupnim parametru p vrati cestu k adresari reprezentovanemu polozkou it
  */
 
-void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
-    std::string p, tmp, path;
+void OpenedListHandle::getFullPath(QTreeWidgetItem *it, std::string &p){
+    std::string tmp;
     QTreeWidgetItem *par = it->parent();
     while(par){
         p = par->text(0).toStdString() + OSInterface::dir_sep + p;
@@ -278,10 +281,19 @@ void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
         p = p + tmp + OSInterface::dir_sep + it->text(0).toStdString();
     else
         p = p + it->text(0).toStdString();
+}
+
+/* pri rozbaleni polozky ve stromu
+ * pro jeji deti vypocita dalsi patra podstromu
+ */
+
+void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
+    std::string p, path;
+    getFullPath(it, p);
     for(int r = 0; r < it->childCount(); ++r)
     {
         QTreeWidgetItem *chi = it->child(r);
-        if((chi == nullptr) || (chi->childCount())) continue;
+        if((chi == nullptr) || (chi->childCount())) continue; //spocitat dalsi patro podstromu
         path = p + OSInterface::dir_sep + chi->text(0).toStdString();
         if(OSInterface::isDir(path))
             ((MyTreeView *) content)->buildTree(path, chi, false);
@@ -293,6 +305,7 @@ void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
  */
 
 void OpenedListHandle::updateLbl(){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     std::stringstream ss;
     std::string file = content->getSelected();
     if(file.empty()) return;
@@ -303,21 +316,8 @@ void OpenedListHandle::updateLbl(){
     if((view_type == LIST) || ( view_type == ICON)){
         dirEntryT *t = content->osi->dirs[content->getSelIdx()];
         if(t != nullptr)
-            ss << round((t->byte_size / pow(1024, size_in)));
-        switch(size_in){
-        case B:
-            ss << " B";
-            break;
-        case KB:
-            ss << " KB";
-            break;
-        case MB:
-            ss << " MB";
-            break;
-        case GB:
-            ss << " GB";
-            break;
-        }
+            ss << round((t->byte_size / pow(1024, data_instance->size_in)));
+        addSizeInfo(ss);
         lbl2->setText(QString::fromStdString(ss.str()));
         ss.str("");
         ss.clear();
@@ -354,7 +354,7 @@ void OpenedListHandle::initLayout(std::string p){
     le2->setMaximumWidth(70);
     le2->setText("*");
     view_type = LIST;
-    content = new MyTreeView(p, le2->text().toStdString(), false);
+    content = new MyTreeView(p, le2->text().toStdString(), false, os);
     tb = new QToolBar();
     lbl = new QLabel();
     lbl2 = new QLabel();
@@ -398,7 +398,7 @@ void OpenedListHandle::initLayout(std::string p){
 
 /* konstruktor */
 
-OpenedListHandle::OpenedListHandle(std::string p, unsigned int s, QWidget *parent):QWidget(parent),in_layout(false), view_type(LIST), path(p), size_in(s){
+OpenedListHandle::OpenedListHandle(std::string p,QWidget *parent):QWidget(parent), os(new OSInterface), in_layout(false), path(p),view_type(LIST){
     last_layout = LIST;
     initLayout(p);
 }
@@ -427,5 +427,6 @@ void OpenedListHandle::delGraphics(){
 OpenedListHandle::~OpenedListHandle(){
     clean();
     delete content;
+    delete os;
     delGraphics();
 }

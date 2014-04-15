@@ -9,6 +9,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <QLabel>
 #include <QTableView>
 #include <QTreeView>
@@ -23,3 +24,10 @@
 #include <QTreeWidgetItem>
 #include <QTextEdit>
 #include <QPersistentModelIndex>
+
+std::shared_ptr<Data> Data::inst = nullptr;
+std::shared_ptr<Data> Data::getInstance(){
+    if(!inst)
+        inst = std::shared_ptr<Data>(new Data);
+    return inst;
+}

@@ -5,6 +5,7 @@
 
 #include <dirent.h>
 #include <QWidget>
+#include <memory>
 #include <QString>
 #include <QPushButton>
 #include <QStandardItem>
@@ -30,6 +31,18 @@
 class MainHandler;
 class OSInterface;
 
+struct Data{
+    unsigned int size_in, max_lists, col_count, init_count;
+    static const long socd_record = 0x06054b50, bufsize = 4096;
+    std::string init_dir, home_path;
+    std::map<std::string, std::string> extern_programmes;
+    enum {B = 0, KB = 1, MB = 2, GB = 3};
+    static std::shared_ptr<Data> getInstance();
+
+private:
+    static std::shared_ptr<Data> inst;
+};
+
 template <class T>
 struct ButtonHandle{
   QAbstractButton *btt;
@@ -38,6 +51,17 @@ struct ButtonHandle{
   void (T::*fnc)(void);
   ButtonHandle(Qt::Key k, std::string l, void (T::*f)(void)): keycode (k), label(l){ btt = new QPushButton(QString::fromStdString(l)); fnc = f;}
 };
+
+#ifndef det
+#define det
+typedef struct {
+  std::string name, type_name, ext_name, mod_time, perms;
+  int type;
+  enum {FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
+  long long byte_size;
+  long long show_size;
+} dirEntryT;
+#endif
 
 typedef struct{
   std::string src_path;
@@ -48,6 +72,9 @@ typedef struct{
 } cmd_info_T;
 
 class MyViewType{
+protected:
+    QIcon dir_icon,ar_icon, base_icon;
+    QFont base_font, bold_font, italic_font;
 public:
   std::set<std::string> multi_selection;
   bool is_focused, marked, recursive;
@@ -63,9 +90,18 @@ public:
   virtual void focus() = 0;
   virtual void mark(bool) = 0;
   virtual void die() = 0;
-  MyViewType(std::string p, std::string pat): is_focused(false), marked(false), path(p), pattern(pat) {
-    osi = nullptr;
+  MyViewType(std::string p, std::string pat, OSInterface *os) : is_focused(false), marked(false), path(p), pattern(pat), osi(os){
+      std::shared_ptr<Data> data_instance = Data::getInstance();
+      dir_icon =  QIcon(QString::fromStdString(data_instance->home_path + "/icons/folder-open-blue.png"));
+      ar_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/database.png"));
+      base_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/doc-plain-blue.png"));
+      italic_font.setFamily("Verdana");
+      italic_font.setItalic(true);
+      bold_font.setBold(true);
+      bold_font.setFamily("Verdana");
+      base_font.setFamily("Verdana");
   }
+
   virtual ~MyViewType() {}
 };
 

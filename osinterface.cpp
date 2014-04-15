@@ -20,8 +20,6 @@
 
 #endif
 
-#define BUFSIZE 4096 //size of copy buffer
-
 OSInterface::OSInterface()
 {
 }
@@ -107,11 +105,14 @@ void OSInterface::rename(cmd_info_T &ci){
  */
 
 void OSInterface::remove(cmd_info_T &ci){
+
     for(auto src : ci.source_files){
         try{
-            std::string warn = src + "\n is a directory. Remove anyvway? \n";
-            if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
-                throw std::exception();
+            if(isDir(src)){
+                std::string warn = src + "\n is a directory. Remove anyvway? \n";
+                if(QMessageBox::question(nullptr, "Remove directory", QString::fromStdString(warn), QMessageBox::Yes|QMessageBox::Default, QMessageBox::No|QMessageBox::Escape) == QMessageBox::No)
+                    throw std::exception();
+            }
             doRemove(src);
             std::stringstream ss;
             ss << "Remove " << src << std::endl;
@@ -133,6 +134,7 @@ void OSInterface::remove(cmd_info_T &ci){
  */
 
 void OSInterface::doCopy(std::string &src, std::string &dst){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     if(isDir(src)){ //je to adresar
         OSInterface os;
         os.getDirInfo(src, "*");
@@ -160,7 +162,7 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
             throw new OSException(dst, "File exists");
         test.close();
         std::ofstream nfile(dst, std::ios::out | std::ios::binary | std::ios::ate);
-        char buf[BUFSIZE];
+        char buf[data_instance->bufsize];
         long long copied = 0;
         if(!nfile.is_open())
             throw new OSException(dst, "Failed to create.");
@@ -169,7 +171,7 @@ void OSInterface::doCopy(std::string &src, std::string &dst){
             long long size = file.tellg();
             file.seekg (0, std::ios::beg);
             while(file.good() && !file.eof()){
-                file.read(buf, BUFSIZE);
+                file.read(buf, data_instance->bufsize);
                 nfile.write(buf, file.gcount());
                 copied += file.gcount();
                 if(nfile.fail())
@@ -209,8 +211,9 @@ size_t OSInterface::computeDirSize(std::string path){
  */
 
 void OSInterface::openFile(std::string &path){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     std::string ext(getExtension(path));
-    std::string app(extern_programmes.at(ext));
+    std::string app(data_instance->extern_programmes.at(ext));
     QString program(app.c_str());
     QStringList arguments;
     arguments << QString::fromStdString(path);

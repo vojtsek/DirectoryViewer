@@ -11,10 +11,10 @@ class ArchiveViewer : public QTreeWidget, public MyViewType
     int idx;
   Q_OBJECT
 public:
-  explicit ArchiveViewer(QWidget *p = 0): QTreeWidget(p), MyViewType("", "") {
+  explicit ArchiveViewer(QWidget *p = 0): QTreeWidget(p), MyViewType("", "", nullptr) {
     setSelectionBehavior(QAbstractItemView::SelectRows);
   }
-  ArchiveViewer(std::string pa, int i = 0, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, "*"), idx(i) {
+  ArchiveViewer(std::string pa, int i = 0, QWidget *p = 0): QTreeWidget(p), MyViewType(pa, "*", nullptr), idx(i) {
     setColumnCount(3);
     setSelectionBehavior(QAbstractItemView::SelectRows);
     rebuild();
@@ -34,7 +34,7 @@ public:
   virtual void focus();
   virtual void mark(bool);
   void readArch();
-  void buildTree(QTreeWidgetItem *, int lvl);
+  void buildTree(QTreeWidgetItem *,unsigned int);
   virtual void die();
 signals:
   void rebuilded();
@@ -42,6 +42,7 @@ signals:
   void unfocused();
   void stepup();
   void chlayout();
+  void refresh();
 };
 
 #endif // ARCHIVEVIEWER_H

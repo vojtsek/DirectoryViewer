@@ -12,8 +12,8 @@ class MyViewer : public QPlainTextEdit, public MyViewType
     bool image;
     int idx;
 public:
-  explicit MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType("","") {}
-  MyViewer(std::string pa, std::string pat, int i = 0, QWidget *p = 0): QPlainTextEdit(p), MyViewType(pa, pat), image(false), idx(i) {
+  explicit MyViewer(QWidget *parent = 0): QPlainTextEdit(parent), MyViewType("","", nullptr) {}
+  MyViewer(std::string pa, std::string pat, int i = 0, QWidget *p = 0): QPlainTextEdit(p), MyViewType(pa, pat, nullptr), image(false), idx(i) {
       if(isImg(path))
           image = true;
     rebuild();
@@ -35,6 +35,7 @@ public:
 signals:
   void focused();
   void rebuilded();
+  void refresh();
   void unfocused();
   void itemSelectionChanged();
   void stepup();

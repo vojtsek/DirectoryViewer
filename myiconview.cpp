@@ -32,12 +32,12 @@ int MyIconView::getIdxOf(std::string &name){
 
 /* zpracovani focusu */
 
-void MyIconView::focusInEvent(QFocusEvent *e){
+void MyIconView::focusInEvent(QFocusEvent *){
     emit(focused());
     focus();
 }
 
-void MyIconView::focusOutEvent(QFocusEvent *e){
+void MyIconView::focusOutEvent(QFocusEvent *){
     unFocus();
 }
 
@@ -61,6 +61,50 @@ std::string MyIconView::getSelected(){
     else return "";
 }
 
+/*
+ * prida polozku
+ * na zaklade informaci o danem souboru
+ */
+
+void MyIconView::addItem(int &col, int &row, dirEntryT *e){
+    QTableWidgetItem *item;
+    item = new QTableWidgetItem(QString::fromStdString(e->name));
+    item->setIcon(base_icon);
+    if(e->type == e->DIR){
+        item->setIcon(dir_icon);
+        item->setFont(bold_font);
+    }else if(e->type == e->LINK){
+        item->setFont(italic_font);
+        item->setForeground(QBrush(QColor(255, 0, 0)));
+    }else if(e->type == e->ARCHIVE){
+        item->setIcon(ar_icon);
+        item->setFont(bold_font);
+        item->setForeground(QBrush(QColor(255, 0, 255)));
+    }else item->setFont(base_font);
+    setItem(row, col, item);
+
+}
+
+void MyIconView::build(int &cols){
+    QTableWidgetItem *item;
+    int col = 0, row = 0;
+    if(path[path.size() - 1] == '/')
+        path = path.substr(0,path.size() - 1);
+    for(auto &e : osi->dirs){
+        if((e->name == ".") || (e->name == "..")) continue;
+        addItem(col, row, e);
+        col = (col + 1) % cols;
+        if(!col)
+            ++row;
+    }
+
+    for(int c = col; c < cols; ++c){
+        item = new QTableWidgetItem("");
+        item->setFlags(Qt::NoItemFlags);
+        setItem(row, c, item);
+    }
+}
+
 /* prebudovani obsahu
  * nacte informace o souborech v adresari
  * spocita a nastavi si parametry
@@ -77,66 +121,22 @@ void MyIconView::rebuild(int idx){
         std::cout << e->what() << std::endl;
     }
 
-    int cols = w / col_width;
+    int cols = w / col_width, col, row;
     setRowCount(osi->dirs.size() / cols + 1);
     setColumnCount(cols);
     setIconSize(QSize(28,28));
     for(int i = 0; i < cols; ++i){
         setColumnWidth(i, col_width - 1);
     }
-    QTableWidgetItem *item;
-    QIcon dir_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/folder-open-blue.png"));
-    QIcon ar_icon(QString::fromStdString(home_path + OSInterface::dir_sep +  "icons/database.png"));
-    QIcon base_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/doc-plain-blue.png"));
-    QFont base_font, bold_font, italic_font;
-    italic_font.setFamily("Verdana");
-    italic_font.setItalic(true);
-    bold_font.setBold(true);
-    bold_font.setFamily("Verdana");
-    base_font.setFamily("Verdana");
-    int row = 0, col = 0;
-    if(path[path.size() - 1] == '/')
-        path = path.substr(0,path.size() - 1);
-    for(auto &e : osi->dirs){
-        if((e->name == ".") || (e->name == "..")) continue;
-        std::stringstream ss;
-        item = new QTableWidgetItem(QString::fromStdString(e->name));
-        item->setIcon(base_icon);
-        if(e->type == e->DIR){
-            item->setIcon(dir_icon);
-            item->setFont(bold_font);
-        }else if(e->type == e->LINK){
-            item->setFont(italic_font);
-            item->setForeground(QBrush(QColor(255, 0, 0)));
-        }else if(e->type == e->ARCHIVE){
-            item->setIcon(ar_icon);
-            item->setFont(bold_font);
-            item->setForeground(QBrush(QColor(255, 0, 255)));
-        }else item->setFont(base_font);
-        setItem(row, col, item);
-        col = (col + 1) % cols;
-        if(!col)
-            ++row;
-    }
-    for(int c = col; c < cols; ++c){
-        item = new QTableWidgetItem("");
-        item->setFlags(Qt::NoItemFlags);
-        setItem(row, c, item);
-    }
+    build(cols);
     horizontalHeader()->setVisible(false);
     verticalHeader()->setVisible(false);
     setShowGrid(false);
-    /*    if(!osi->dirs.empty()){ //oznaceni prvniho prvku pri vzniku
-        QPersistentModelIndex nextIndex = indexAt(QPoint(0, 0));
-        selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
-    }
-    */
     if(!osi->dirs.empty()){
         row = idx / cols;
         col = idx % cols;
         QPersistentModelIndex nextIndex = model()->index(row, col);
         selectionModel()->setCurrentIndex(nextIndex, QItemSelectionModel::SelectCurrent);
-       // selectionModel()->select(nextIndex, QItemSelectionModel::ClearAndSelect);
     }
 }
 
@@ -214,6 +214,9 @@ void MyIconView::keyPressEvent(QKeyEvent *e){
         break;
     case Qt::Key_F1:
         emit(chlayout());
+        break;
+    case Qt::Key_F11:
+        emit(refresh());
         break;
     case Qt::Key_Down:
     case Qt::Key_Up:

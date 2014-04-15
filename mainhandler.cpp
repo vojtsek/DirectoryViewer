@@ -22,41 +22,20 @@
 MainHandler::MainHandler(QObject *parent) :
     QObject(parent)
 {
-    int param;
-    size_in = KB;
-    init_dir = OSInterface::getCWD();
-    home_path = OSInterface::getCWD();
-    max_lists = 4;
-    init_count = 2;
-    col_count = 2;
-    std::string line, option, d;
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+    data_instance->init_dir = OSInterface::getCWD();
+    data_instance->home_path = OSInterface::getCWD();
+    loadSettings(data_instance);
+    loadApps(data_instance);
+}
+
+/*
+ * nacte jmena aplikaci pro otevreni danych koncovek
+ */
+
+void MainHandler::loadApps(std::shared_ptr<Data> data_instance){
     try{
-        std::ifstream in("dv.conf");
-        while(1){
-            getline(in, line);
-            std::stringstream ss(line);
-            if(line.empty()) break;
-            ss >> option;
-            if((option != "start_directory") && (option != "home_path")){
-                ss >> param;
-                if(option == "column_count") col_count = param;
-                else if(option == "max_list_count") max_lists = param;
-                else if(option == "init_list_count") init_count = param;
-                else if(option == "size_in") size_in = param;
-            } else{
-                ss >> d;
-                if(option == "start_directory"){
-                    if(d == "cwd")
-                        init_dir = OSInterface::getCWD();
-                    else
-                        init_dir = d;
-                }else if(option == "home_path")
-                    home_path = d;
-            }
-        }
-    }catch(std::exception e) { std::cout << e.what() << std::endl; }
-    try{
-        std::string ext, app;
+        std::string ext, app, line, option;
         std::ifstream in("extern.conf");
         while(in.good()){
             getline(in, line);
@@ -66,17 +45,53 @@ MainHandler::MainHandler(QObject *parent) :
             if(!option.empty()){
                 ss >> app;
                 if(!app.empty()){
-                    int pos;
+                    unsigned int pos;
                     while((pos = option.find(',')) != std::string::npos){
                         ext = option.substr(0, pos);
                         option = option.substr(pos + 1, option.size());
-                        extern_programmes.emplace(ext, app);
+                        data_instance->extern_programmes.emplace(ext, app);
                     }
-                    extern_programmes.emplace(option, app);
+                    data_instance->extern_programmes.emplace(option, app);
                 }
             }
         }
     }catch(std::exception e) { std::cout << e.what() << std::endl; }
+}
+
+/*
+ * nacte obsah konfiguracniho souboru
+ */
+
+void MainHandler::loadSettings(std::shared_ptr<Data> data_instance){
+    std::string line, option, d;
+    int param;
+
+    try{
+        std::ifstream in("dv.conf");
+        while(1){
+            getline(in, line);
+            std::stringstream ss(line);
+            if(line.empty()) break;
+            ss >> option;
+            if((option != "start_directory") && (option != "home_path")){
+                ss >> param;
+                if(option == "column_count") data_instance->col_count = param;
+                else if(option == "max_list_count") data_instance->max_lists = param;
+                else if(option == "init_list_count") data_instance->init_count = param;
+                else if(option == "size_in") data_instance->size_in = param;
+            } else{
+                ss >> d;
+                if(option == "start_directory"){
+                    if(d == "cwd")
+                        data_instance->init_dir = OSInterface::getCWD();
+                    else
+                        data_instance->init_dir = d;
+                }else if(option == "home_path")
+                    data_instance->home_path = d;
+            }
+        }
+    }catch(std::exception e) { std::cout << e.what() << std::endl; }
+
 }
 
 /* vytvori strukturu cmd_info_T;
@@ -112,6 +127,23 @@ void MainHandler::prepare_cmd(cmd_info_T &cmd_info, bool &is_src, bool &is_dst, 
     }
 }
 
+void MainHandler::refresh(OpenedListHandle *o){
+    refreshLists(o, false);
+}
+
+/*
+ * aktualizuje dany(e) seznam(y)
+ */
+
+void MainHandler::refreshLists(OpenedListHandle *src, bool all){
+    src->content->multi_selection.clear();
+    src->content->rebuild();
+    if(all){
+        for(auto &a : opened_lists)
+            if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
+    }
+}
+
 /* slot reagujici na vyvolani kopirovani
  * pripravi strukturu cmd_info_T, zkontroluje korektnost operace
  * pokud vse odpovida, vyvola signal, ktery je zachycen v hlavnim okne a provede reload,
@@ -133,10 +165,7 @@ void MainHandler::copy(){
     }
     if(is_dst && is_src){
         emit(confirm1("Copy",cmd_info));
-        src->content->multi_selection.clear();
-        src->content->rebuild();
-        for(auto &a : opened_lists)
-            if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
+        refreshLists(src, true);
     }else{
         if(!is_dst){
             std::string err("No selected destinations.");
@@ -144,7 +173,8 @@ void MainHandler::copy(){
         }
         if(!is_src){
             std::string err("No selected source files.");
-            emit(error(err));
+            emit(error(err));src->content->multi_selection.clear();
+            src->content->rebuild();
         }
     }
 }
@@ -163,8 +193,7 @@ void MainHandler::remove() {
     prepare_cmd(cmd_info, is_src, is_dst, false, src);
     if(is_src){
         emit(confirm2("Remove",cmd_info));
-        src->content->multi_selection.clear();
-        src->content->rebuild();
+        refreshLists(src, false);
     }else{
         std::string err("No source file selected.");
         emit(error(err));
@@ -192,11 +221,7 @@ void MainHandler::move() {
     }
     if(is_dst && is_src){
         emit(confirm1("Move",cmd_info));
-        src->content->multi_selection.clear();
-        src->content->rebuild();
-        for(auto &a : opened_lists)
-            if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
-    }else{
+        refreshLists(src, true);
         if(!is_dst){
             std::string err("No selected destinations.");
             emit(error(err));
@@ -237,8 +262,7 @@ void MainHandler::rename() {
             cmd_info.destination_files[a].insert(str);
         }
         OSInterface::rename(cmd_info);
-        src->content->multi_selection.clear();
-        src->content->rebuild();
+        refreshLists(src, false);
     }else{
         std::string err("No selected source files.");
         emit(error(err));
@@ -282,8 +306,11 @@ void MainHandler::create() {
 /* slot reagujici na pridani dalsiho seznamu - vytvori ho a informuje mainwindow */
 
 void MainHandler::list_added(){
-    if(opened_lists.size() < max_lists){
-        opened_lists.push_back(new OpenedListHandle(init_dir, size_in));
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+    if(opened_lists.size() < data_instance->max_lists){
+        OpenedListHandle *no = new OpenedListHandle(data_instance->init_dir);
+        opened_lists.push_back(no);
+        QObject::connect(no, &OpenedListHandle::refreshed, this, &MainHandler::refresh);
         emit(ch_list(false));
     }
 }

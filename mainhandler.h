@@ -7,9 +7,6 @@
 #include <QObject>
 #include <string>
 
-extern int size_in, max_lists, col_count, init_count;
-extern std::string init_dir, home_path;
-extern std::map<std::string, std::string> extern_programmes;
 class OpenedListHandle;
 
 class MainHandler : public QObject
@@ -17,10 +14,12 @@ class MainHandler : public QObject
   Q_OBJECT
   void prepare_cmd(cmd_info_T &, bool &, bool &, bool, OpenedListHandle *&);
 public:
-  static enum {B, KB, MB, GB} sz;
   std::map<Qt::Key, ButtonHandle<MainHandler>> tool_btts;
   std::vector<OpenedListHandle *> opened_lists;
   explicit MainHandler(QObject *parent = 0);
+  void loadSettings(std::shared_ptr<Data>);
+  void loadApps(std::shared_ptr<Data>);
+  void refreshLists(OpenedListHandle *, bool);
 
 signals:
   void ch_list(bool);
@@ -34,6 +33,7 @@ public slots:
   void move();
   void rename();
   void create();
+  void refresh(OpenedListHandle *);
   void list_added();
   void list_removed();
 };

@@ -16,9 +16,6 @@
 #include <sstream>
 #include <string>
 
-extern int size_in;
-extern std::string home_path;
-
 /* vrati index prave oznaceneho prvku */
 
 int MyTreeView::getSelIdx(){
@@ -27,7 +24,7 @@ int MyTreeView::getSelIdx(){
 
 /* zpracuje ziskani focusu, pripadne oznaci prvni prvek */
 
-void MyTreeView::focusInEvent(QFocusEvent *e){
+void MyTreeView::focusInEvent(QFocusEvent *){
     emit(focused());
     if(model()){
         if(selectedIndexes().empty()){
@@ -36,6 +33,38 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
         }
     }
     focus();
+}
+
+/*
+ * zpracuje polozku ve stromu
+ * podle informaci o souboru
+ */
+
+void MyTreeView::addItem(QTreeWidgetItem *item, dirEntryT *e){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+
+    std::stringstream ss;
+
+    item->setText(0, QString::fromStdString(e->name));
+    item->setIcon(0, base_icon);
+    if(e->type == e->DIR){
+        item->setIcon(0, dir_icon);
+        item->setFont(0, bold_font);
+    }else if(e->type == e->LINK){
+        item->setFont(0, italic_font);
+        item->setForeground(0, QBrush(QColor(255, 0, 0)));
+    }else if(e->type == e->ARCHIVE){
+        item->setIcon(0, ar_icon);
+        item->setFont(0, bold_font);
+        item->setForeground(0, QBrush(QColor(255, 0, 255)));
+    }else item->setFont(0, base_font);
+
+    item->setText(1, QString::fromStdString(e->type_name));
+    item->setFont(1, italic_font);
+    if(e->type == e->DIR) item->setFont(0, bold_font);
+    ss << round((e->byte_size / pow(1024, data_instance->size_in)));
+    addSizeInfo(ss);
+    item->setText(2, QString::fromStdString(ss.str()));
 }
 
 /* rekurzivne vytvori strom
@@ -47,66 +76,30 @@ void MyTreeView::focusInEvent(QFocusEvent *e){
  */
 
 void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
-    OSInterface os;
-    try{
-        os.getDirInfo(root, pattern);
-    }catch(OSException *e){
-        std::cout << e->what() << std::endl;
-        return;
+    OSInterface *os;
+    if(!recursive)
+        os = osi;
+    else{
+        os = new OSInterface();
+        try{
+            os->getDirInfo(root, pattern);
+        }catch(OSException *e){
+            std::cout << e->what() << std::endl;
+            return;
+        }
     }
-    QIcon dir_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/folder-open-blue.png"));
-    QIcon ar_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/database.png"));
-    QIcon base_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/doc-plain-blue.png"));
-    QFont base_font, bold_font, italic_font;
-    italic_font.setFamily("Verdana");
-    italic_font.setItalic(true);
-    bold_font.setBold(true);
-    bold_font.setFamily("Verdana");
-    base_font.setFamily("Verdana");
     if(root[root.size() - 1] == OSInterface::dir_sep)
         root = root.substr(0,root.size() - 1);
     QTreeWidgetItem *item;
-    for(auto &e : os.dirs){
+
+    for(auto &e : os->dirs){
         if(e->name.empty()) continue;
         if((e->name == ".") || (e->name == "..")) continue;
-        std::stringstream ss;
         if(it != nullptr) // ma predka
             item = new QTreeWidgetItem();
         else // vrchni uroven
             item = new QTreeWidgetItem(this);
-        item->setText(0, QString::fromStdString(e->name));
-        item->setIcon(0, base_icon);
-        if(e->type == e->DIR){
-            item->setIcon(0, dir_icon);
-            item->setFont(0, bold_font);
-        }else if(e->type == e->LINK){
-            item->setFont(0, italic_font);
-            item->setForeground(0, QBrush(QColor(255, 0, 0)));
-        }else if(e->type == e->ARCHIVE){
-            item->setIcon(0, ar_icon);
-            item->setFont(0, bold_font);
-            item->setForeground(0, QBrush(QColor(255, 0, 255)));
-        }else item->setFont(0, base_font);
-
-        item->setText(1, QString::fromStdString(e->type_name));
-        item->setFont(1, italic_font);
-        if(e->type == e->DIR) item->setFont(0, bold_font);
-        ss << round((e->byte_size / pow(1024, size_in)));
-        switch(size_in){
-        case MainHandler::B:
-            ss << " B";
-            break;
-        case MainHandler::KB:
-            ss << " KB";
-            break;
-        case MainHandler::MB:
-            ss << " MB";
-            break;
-        case MainHandler::GB:
-            ss << " GB";
-            break;
-        }
-        item->setText(2, QString::fromStdString(ss.str()));
+        addItem(item, e);
         if(recursive && top){
             if(e->type == e->DIR){
                 buildTree(root + OSInterface::dir_sep + e->name, item, false);
@@ -117,6 +110,7 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
             it->setExpanded(false);
         }
     }
+    if(recursive) delete os;
 }
 
 /* prebuduje obsah seznamu
@@ -150,7 +144,7 @@ void MyTreeView::rebuild(int idx){
 
 /* zpracovani udalosti */
 
-void MyTreeView::focusOutEvent(QFocusEvent *e){
+void MyTreeView::focusOutEvent(QFocusEvent *){
     unFocus();
 }
 
@@ -230,6 +224,9 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
     case Qt::Key_F1:
         emit(chlayout());
         break;
+    case Qt::Key_F11:
+        emit(refresh());
+        break;
     case Qt::Key_Down:
     case Qt::Key_Up:
         QTreeWidget::keyPressEvent(e);
@@ -240,21 +237,10 @@ void MyTreeView::keyPressEvent(QKeyEvent *e){
         try{
         size = OSInterface::computeDirSize(getSelected());
         std::stringstream ss;
-        ss << round((size / pow(1024, size_in)));
-        switch(size_in){
-        case MainHandler::B:
-            ss << " B";
-            break;
-        case MainHandler::KB:
-            ss << " KB";
-            break;
-        case MainHandler::MB:
-            ss << " MB";
-            break;
-        case MainHandler::GB:
-            ss << " GB";
-            break;
-        }
+        std::shared_ptr<Data> data_instance = Data::getInstance();
+        ss << round((size / pow(1024, data_instance->size_in)));
+        addSizeInfo(ss);
+
         currentItem()->setText(2, QString::fromStdString(ss.str()));
     }catch(OSException *e) { std::cout << e->what() << std::endl; }
         break;
@@ -288,9 +274,7 @@ void MyTreeView::updateSelection(){
                 topLevelItem(i)->setBackground(0,brb);
                 topLevelItem(i)->setFont(0, sel_font);
                 topLevelItem(i)->setBackground(1,brb);
-                //   topLevelItem(i)->setFont(1, sel_font);
                 topLevelItem(i)->setBackground(2,brb);
-                //  topLevelItem(i)->setFont(2, sel_font);
             }
             else{
                 std::string file = path + topLevelItem(i)->text(0).toStdString();
@@ -301,12 +285,12 @@ void MyTreeView::updateSelection(){
                 topLevelItem(i)->setBackground(2,brw);
                 topLevelItem(i)->setFont(0, base_font);
                 base_font.setBold(false);
-                // topLevelItem(i)->setFont(1, base_font);
-                // topLevelItem(i)->setFont(2, base_font);
             }
         }
     }
 }
+
+
 
 /* zmena vzhledu pri focusu */
 

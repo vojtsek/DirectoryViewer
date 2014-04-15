@@ -1,4 +1,5 @@
 #include "optiondialog.h"
+#include "types.h"
 #include <QtWidgets>
 #include <iostream>
 #include <sstream>
@@ -7,36 +8,33 @@
 #include <string>
 #include <map>
 
-extern int size_in, max_lists, col_count, init_count;
-extern std::string init_dir;
-extern std::map<std::string, std::string> extern_programmes;
-
 /* konstruktor
  * vytvori dialog umoznujici nastaveni
  */
 
-OptionDialog::OptionDialog()
-{
+OptionDialog::OptionDialog(){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+
     std::stringstream ss;
     layout = new QGridLayout();
     combo = new QComboBox();
-    ss << col_count;
+    ss << data_instance->col_count;
     le_col_count = new QLineEdit(QString::fromStdString(ss.str()));
-    le_dir = new QLineEdit(QString::fromStdString(init_dir));
+    le_dir = new QLineEdit(QString::fromStdString(data_instance->init_dir));
     le_dir->setFixedWidth(220);
     ss.str("");
     ss.clear();
-    ss << init_count;
+    ss << data_instance->init_count;
     le_init_count = new QLineEdit(QString::fromStdString(ss.str()));
     ss.str("");
     ss.clear();
-    ss << max_lists;
+    ss << data_instance->max_lists;
     le_max_lists = new QLineEdit(QString::fromStdString(ss.str()));
     combo->addItem("B");
     combo->addItem("KB");
     combo->addItem("MB");
     combo->addItem("GB");
-    combo->setCurrentIndex(size_in);
+    combo->setCurrentIndex(data_instance->size_in);
 
     layout->addWidget(new QLabel("View size in:"), 0, 0);
     layout->addWidget(combo, 0, 1);
@@ -51,7 +49,7 @@ OptionDialog::OptionDialog()
 
     QLineEdit *e, *app;
     int row = 5;
-    for(auto a : extern_programmes){
+    for(auto a : data_instance->extern_programmes){
         e = new QLineEdit(QString::fromStdString(a.first));
         app = new QLineEdit(QString::fromStdString(a.second));
         ext_apps.emplace(e, app);
@@ -99,17 +97,19 @@ void OptionDialog::addRow(){
  */
 
 void OptionDialog::save(){
-    size_in = combo->currentIndex();
-    col_count = atoi(le_col_count->text().toStdString().c_str());
-    max_lists = atoi(le_max_lists->text().toStdString().c_str());
-    init_count = atoi(le_init_count->text().toStdString().c_str());
-    init_dir = le_dir->text().toStdString();
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+
+    data_instance->size_in = combo->currentIndex();
+    data_instance->col_count = atoi(le_col_count->text().toStdString().c_str());
+    data_instance->max_lists = atoi(le_max_lists->text().toStdString().c_str());
+    data_instance->init_count = atoi(le_init_count->text().toStdString().c_str());
+    data_instance->init_dir = le_dir->text().toStdString();
     std::ofstream out("dv.conf");
-    out << "column_count " << col_count << std::endl;
-    out << "size_in " << size_in << std::endl;
-    out << "max_list_count " << max_lists << std::endl;
-    out << "init_list_count " << init_count << std::endl;
-    out << "start_directory " << init_dir << std::endl;
+    out << "column_count " << data_instance->col_count << std::endl;
+    out << "size_in " << data_instance->size_in << std::endl;
+    out << "max_list_count " << data_instance->max_lists << std::endl;
+    out << "init_list_count " << data_instance->init_count << std::endl;
+    out << "start_directory " << data_instance->init_dir << std::endl;
     out.close();
     out.open("extern.conf");
     for(auto a : ext_apps){

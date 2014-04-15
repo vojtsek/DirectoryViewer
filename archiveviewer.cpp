@@ -23,7 +23,7 @@ int ArchiveViewer::getSelIdx(){
 }
 
 /* zpracuje udalost predani focusu, vola focus() */
-void ArchiveViewer::focusInEvent(QFocusEvent *e){
+void ArchiveViewer::focusInEvent(QFocusEvent *) {
     emit(focused());
     if(model()){
         if(selectedIndexes().empty()){ // na zacatku
@@ -34,27 +34,22 @@ void ArchiveViewer::focusInEvent(QFocusEvent *e){
     focus();
 }
 
-/* vytvori obsah tohoto prvku;
+/*
+ * vytvori obsah tohoto prvku;
  * promenna idx ukazuje do vectoru items obsahujiciho jmena souboru z archivu.
  * prislusne soubory povesi pod *it;
  */
-void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
-    QIcon dir_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/folder-open-green.png"));
-    QIcon base_icon(QString::fromStdString(home_path + OSInterface::dir_sep + "icons/doc-plain-green.png"));
-    QFont base_font, bold_font, italic_font;
-    italic_font.setFamily("Verdana");
-    italic_font.setItalic(true);
-    bold_font.setBold(true);
-    bold_font.setFamily("Verdana");
-    base_font.setFamily("Verdana");
+void ArchiveViewer::buildTree(QTreeWidgetItem *it, unsigned int idx){
+
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     std::string name, prefix, tmp;
     char last;
-    int pos;
+    unsigned int pos;
+
     try{
         tmp = prefix = name = items.at(idx);
-    }catch(std::exception e) { return; }
+    }catch(std::exception) { return; }
     QTreeWidgetItem *item;
-    //std::stringstream ss;
     if(it != nullptr)
         item = new QTreeWidgetItem();
     else // top level
@@ -70,14 +65,14 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
         if(++idx >= items.size()) break;
         try{
             name = items.at(idx);
-        }catch(std::exception e) { break; }
+        }catch(std::exception) { break; }
         if((name.find('/') != std::string::npos) && (name.find(prefix) != 0)) break; // narazil na soubor, ktery uz nepatri pod tuto polozku - neobsahuje prefix (na zacatku)
         last = name[name.size() - 1];
         if(name != prefix)
             name = name.substr(prefix.size(), name.size() - prefix.size() - 1);
         if(name.find('/') != std::string::npos) continue; // mezi prefixem a souborem je netrivialni cesta - tato polozka bude pripojena rekurzivne pozdeji
         name.push_back(last);
-        if((name.find(prefix) == 0) | tmp[tmp.size() - 1] == '/')
+        if((name.find(prefix) == 0) | (tmp[tmp.size() - 1] == '/'))
             buildTree(item, idx); // vola se pro syny
         else{
             buildTree(nullptr, idx);
@@ -95,6 +90,7 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, int idx){
 /* nacte jmena souboru v archivu do vectoru items, vcetne cest */
 
 void ArchiveViewer::readArch(){
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     std::string ext = getExtension(path);
     if (ext == "zip"){ // pro zip archivy
         char *buf = new char[4], *fn;
@@ -109,7 +105,7 @@ void ArchiveViewer::readArch(){
             file.seekg (offset, std::ios::end);
             file.read(buf, 4);
             offset -= 1;
-        }while(*ptr_32 != 0x06054b50);
+        }while(*ptr_32 != data_instance->socd_record);
 
         file.seekg (12, std::ios::cur);
         file.read(buf, 4);
@@ -135,13 +131,13 @@ void ArchiveViewer::readArch(){
             file.seekg(cur_off, std::ios::beg);
             file.read(buf, 4); //precte pro kontrolu
             cur_off += 28;
-        }while(*ptr_32 != 0x06054b50); //do SOCD
+        }while(*ptr_32 != data_instance->socd_record); //do SOCD
     }
 }
 
 /* vyvola prebudovani obsahu - od zacatku */
 
-void ArchiveViewer::rebuild(int idx){
+void ArchiveViewer::rebuild(int){
     readArch();
     clear();
     buildTree(nullptr, 0);
@@ -155,7 +151,7 @@ void ArchiveViewer::rebuild(int idx){
 
 /* obsluhy udalosti */
 
-void ArchiveViewer::focusOutEvent(QFocusEvent *e){
+void ArchiveViewer::focusOutEvent(QFocusEvent *){
     unFocus();
 }
 
@@ -197,6 +193,8 @@ void ArchiveViewer::keyPressEvent(QKeyEvent *e){
         currentItem()->setExpanded(!currentItem()->isExpanded());
     }else if(e->key() == Qt::Key_F1)
         emit(chlayout());
+    else if(e->key() == Qt::Key_F11)
+        emit(refresh());
     else // zpracuj normalne
         QTreeWidget::keyPressEvent(e);
 }
