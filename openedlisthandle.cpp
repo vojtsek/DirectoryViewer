@@ -172,10 +172,12 @@ void OpenedListHandle::stepUp(){
         le1->setText(QString::fromStdString(cont));
     else
         le1->setText(QString::fromStdString(OSInterface::getPrefix()));
+    os->getDirInfo(path, "*");
     content->setFocus();
 }
 
-/* slot, pri zmene cesty ve vstupnim poli
+/*
+ *  slot, pri zmene cesty ve vstupnim poli
  * prestavi seznam
  */
 
@@ -184,6 +186,8 @@ void OpenedListHandle::pathChanged(){
         path = le1->text().toStdString();
         content->path = path;
         int idx(0);
+        os->dirs.clear();
+        os->getDirInfo(path,"*");
         content->rebuild();
         if(!last_dir.empty())
             idx = content->getIdxOf(last_dir);
@@ -283,7 +287,8 @@ void OpenedListHandle::getFullPath(QTreeWidgetItem *it, std::string &p){
         p = p + it->text(0).toStdString();
 }
 
-/* pri rozbaleni polozky ve stromu
+/*
+ *  pri rozbaleni polozky ve stromu
  * pro jeji deti vypocita dalsi patra podstromu
  */
 
@@ -300,7 +305,8 @@ void OpenedListHandle::itemExpanded(QTreeWidgetItem *it){
     }
 }
 
-/* aktualizuje informace ve spodnim radku,
+/*
+ *  aktualizuje informace ve spodnim radku,
  * info cte primo ze seznamu, indexy si proto musi odpovidat
  */
 
@@ -327,7 +333,8 @@ void OpenedListHandle::updateLbl(){
     lbl3->setText(QString::fromStdString(ss.str()));
 }
 
-/* vytvori vsechny graficke prvky a vlozi je do layoutu
+/*
+ *  vytvori vsechny graficke prvky a vlozi je do layoutu
  * postara se o pripojeni obsluhy tlacitek
  */
 
@@ -400,6 +407,11 @@ void OpenedListHandle::initLayout(std::string p){
 
 OpenedListHandle::OpenedListHandle(std::string p,QWidget *parent):QWidget(parent), os(new OSInterface), in_layout(false), path(p),view_type(LIST){
     last_layout = LIST;
+    try{
+        os->getDirInfo(path, "*");
+    }catch(OSException *e){
+        std::cout << e->what() << std::endl;
+    }
     initLayout(p);
 }
 

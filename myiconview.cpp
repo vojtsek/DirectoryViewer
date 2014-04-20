@@ -113,6 +113,7 @@ void MyIconView::build(int &cols){
 
 void MyIconView::rebuild(int idx){
     clear();
+    /*
     if(osi == nullptr) osi = new OSInterface();
     osi->dirs.clear();
     try{
@@ -120,6 +121,7 @@ void MyIconView::rebuild(int idx){
     }catch(OSException *e){
         std::cout << e->what() << std::endl;
     }
+    */
 
     int cols = w / col_width, col, row;
     setRowCount(osi->dirs.size() / cols + 1);

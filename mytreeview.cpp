@@ -119,7 +119,8 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
  */
 
 void MyTreeView::rebuild(int idx){
-    if(osi == nullptr) osi = new OSInterface();
+    /*
+     * if(osi == nullptr) osi = new OSInterface();
     osi->dirs.clear();
     try{
         osi->getDirInfo(path, pattern);
@@ -127,6 +128,7 @@ void MyTreeView::rebuild(int idx){
         std::cout << e->what() << std::endl;
         stepup();
     }
+    */
     clear();
     buildTree(path, nullptr, true);
     setEditTriggers(QTreeWidget::NoEditTriggers);

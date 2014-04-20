@@ -18,7 +18,7 @@ void MyLineEdit::focusOutEvent(QFocusEvent *e){
 }
 
 /* zpracovani stisku klavesy
- * zajistuje, aby v pripade, ze uz tam je jen prefix cesty tak nepujde smazat
+ * zajistuje,ze v pripade, ze uz tam je jen prefix cesty tak nepujde smazat
  * a take nejde vkladat vice oddelovacu za sebou
  */
 

@@ -45,30 +45,31 @@ private:
 
 template <class T>
 struct ButtonHandle{
-  QAbstractButton *btt;
-  Qt::Key keycode;
-  std::string label;
-  void (T::*fnc)(void);
-  ButtonHandle(Qt::Key k, std::string l, void (T::*f)(void)): keycode (k), label(l){ btt = new QPushButton(QString::fromStdString(l)); fnc = f;}
+    QAbstractButton *btt;
+    Qt::Key keycode;
+    std::string label;
+    void (T::*fnc)(void);
+    ButtonHandle(Qt::Key k, std::string l, void (T::*f)(void)): keycode (k), label(l){ btt = new QPushButton(QString::fromStdString(l)); fnc = f;}
 };
 
-#ifndef det
-#define det
-typedef struct {
-  std::string name, type_name, ext_name, mod_time, perms;
-  int type;
-  enum {FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
-  long long byte_size;
-  long long show_size;
-} dirEntryT;
-#endif
+struct dirEntryT{
+    std::string name, type_name, ext_name, mod_time, perms;
+    int type;
+    enum {FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
+    long long byte_size;
+    long long show_size;
+    dirEntryT *l, *r;
+
+    dirEntryT():type(FILE), byte_size(0), show_size(0), l(nullptr), r(nullptr) {}
+};
+
 
 typedef struct{
-  std::string src_path;
-  std::set<std::string> source_files, paths;
-  std::map<std::string,std::set<std::string>> destination_files;
-  enum {COPY, MOVE, VIEW, RENAME, REMOVE };
-  int cmd;
+    std::string src_path;
+    std::set<std::string> source_files, paths;
+    std::map<std::string,std::set<std::string>> destination_files;
+    enum {COPY, MOVE, VIEW, RENAME, REMOVE };
+    int cmd;
 } cmd_info_T;
 
 class MyViewType{
@@ -76,33 +77,33 @@ protected:
     QIcon dir_icon,ar_icon, base_icon;
     QFont base_font, bold_font, italic_font;
 public:
-  std::set<std::string> multi_selection;
-  bool is_focused, marked, recursive;
-  std::string path, pattern;
-  OSInterface *osi;
-  int w, col_width, index;
-  virtual std::string getSelected() = 0;
-  virtual void rebuild(int idx = 0) = 0;
-  virtual int getSelIdx() = 0;
-  virtual int getIdxOf(std::string &) = 0;
-  virtual void setFocus() = 0;
-  virtual void unFocus() = 0;
-  virtual void focus() = 0;
-  virtual void mark(bool) = 0;
-  virtual void die() = 0;
-  MyViewType(std::string p, std::string pat, OSInterface *os) : is_focused(false), marked(false), path(p), pattern(pat), osi(os){
-      std::shared_ptr<Data> data_instance = Data::getInstance();
-      dir_icon =  QIcon(QString::fromStdString(data_instance->home_path + "/icons/folder-open-blue.png"));
-      ar_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/database.png"));
-      base_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/doc-plain-blue.png"));
-      italic_font.setFamily("Verdana");
-      italic_font.setItalic(true);
-      bold_font.setBold(true);
-      bold_font.setFamily("Verdana");
-      base_font.setFamily("Verdana");
-  }
+    std::set<std::string> multi_selection;
+    bool is_focused, marked, recursive;
+    std::string path, pattern;
+    OSInterface *osi;
+    int w, col_width, index;
+    virtual std::string getSelected() = 0;
+    virtual void rebuild(int idx = 0) = 0;
+    virtual int getSelIdx() = 0;
+    virtual int getIdxOf(std::string &) = 0;
+    virtual void setFocus() = 0;
+    virtual void unFocus() = 0;
+    virtual void focus() = 0;
+    virtual void mark(bool) = 0;
+    virtual void die() = 0;
+    MyViewType(std::string p, std::string pat, OSInterface *os) : is_focused(false), marked(false), path(p), pattern(pat), osi(os){
+        std::shared_ptr<Data> data_instance = Data::getInstance();
+        dir_icon =  QIcon(QString::fromStdString(data_instance->home_path + "/icons/folder-open-blue.png"));
+        ar_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/database.png"));
+        base_icon = QIcon(QString::fromStdString(data_instance->home_path + "/icons/doc-plain-blue.png"));
+        italic_font.setFamily("Verdana");
+        italic_font.setItalic(true);
+        bold_font.setBold(true);
+        bold_font.setFamily("Verdana");
+        base_font.setFamily("Verdana");
+    }
 
-  virtual ~MyViewType() {}
+    virtual ~MyViewType() {}
 };
 
 #endif //TYPES_H
