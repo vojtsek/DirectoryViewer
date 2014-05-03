@@ -9,6 +9,7 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = DirectoryViewer
+
 TEMPLATE = app
 
 
@@ -27,7 +28,9 @@ SOURCES += main.cpp\
     mydialog.cpp \
     myviewer.cpp \
     archiveviewer.cpp \
-    optiondialog.cpp
+    optiondialog.cpp \
+    wroker.cpp \
+    worker.cpp
 
 HEADERS  += mainwindow.h \
     mainhandler.h \
@@ -43,7 +46,9 @@ HEADERS  += mainwindow.h \
     mydialog.h \
     myviewer.h \
     archiveviewer.h \
-    optiondialog.h
+    optiondialog.h \
+    wroker.h \
+    worker.h
 
 FORMS    += mainwindow.ui
 

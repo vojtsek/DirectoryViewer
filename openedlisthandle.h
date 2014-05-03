@@ -50,7 +50,7 @@ public:
     MyViewType *content;
     QToolBar *tb, *tb2;
     bool in_layout;
-    std::string path;
+    std::string path, pattern;
     enum {TREE, LIST, ICON, VIEW, ARCHIVE};
     int view_type, last_layout;
     enum {B, KB, MB, GB};

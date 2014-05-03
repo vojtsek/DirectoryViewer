@@ -10,8 +10,6 @@
 #include <sstream>
 #include <string>
 
-extern std::string home_path;
-
 /* vrati index oznaceneho prvku, prepocitany z mrizky */
 
 int MyIconView::getSelIdx(){
@@ -70,13 +68,13 @@ void MyIconView::addItem(int &col, int &row, dirEntryT *e){
     QTableWidgetItem *item;
     item = new QTableWidgetItem(QString::fromStdString(e->name));
     item->setIcon(base_icon);
-    if(e->type == e->DIR){
+    if(e->type == e->Type::DIR){
         item->setIcon(dir_icon);
         item->setFont(bold_font);
-    }else if(e->type == e->LINK){
+    }else if(e->type == e->Type::LINK){
         item->setFont(italic_font);
         item->setForeground(QBrush(QColor(255, 0, 0)));
-    }else if(e->type == e->ARCHIVE){
+    }else if(e->type == e->Type::ARCHIVE){
         item->setIcon(ar_icon);
         item->setFont(bold_font);
         item->setForeground(QBrush(QColor(255, 0, 255)));
@@ -113,16 +111,6 @@ void MyIconView::build(int &cols){
 
 void MyIconView::rebuild(int idx){
     clear();
-    /*
-    if(osi == nullptr) osi = new OSInterface();
-    osi->dirs.clear();
-    try{
-        osi->getDirInfo(path, pattern);
-    }catch(OSException *e){
-        std::cout << e->what() << std::endl;
-    }
-    */
-
     int cols = w / col_width, col, row;
     setRowCount(osi->dirs.size() / cols + 1);
     setColumnCount(cols);

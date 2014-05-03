@@ -23,6 +23,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <thread>
 
 #ifndef TYPES_H
 #define TYPES_H
@@ -37,6 +38,7 @@ struct Data{
     std::string init_dir, home_path;
     std::map<std::string, std::string> extern_programmes;
     enum {B = 0, KB = 1, MB = 2, GB = 3};
+    std::vector<std::thread> thrs;
     static std::shared_ptr<Data> getInstance();
 
 private:
@@ -54,13 +56,11 @@ struct ButtonHandle{
 
 struct dirEntryT{
     std::string name, type_name, ext_name, mod_time, perms;
-    int type;
-    enum {FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
+    enum class Type{FILE, DIR, UNKNOWN, LINK, ARCHIVE, EXE};
+    Type type;
     long long byte_size;
     long long show_size;
-    dirEntryT *l, *r;
-
-    dirEntryT():type(FILE), byte_size(0), show_size(0), l(nullptr), r(nullptr) {}
+    dirEntryT():type(Type::FILE), byte_size(0), show_size(0) {}
 };
 
 
@@ -68,8 +68,8 @@ typedef struct{
     std::string src_path;
     std::set<std::string> source_files, paths;
     std::map<std::string,std::set<std::string>> destination_files;
-    enum {COPY, MOVE, VIEW, RENAME, REMOVE };
-    int cmd;
+    enum class Cmd{COPY, MOVE, VIEW, RENAME, REMOVE };
+    Cmd cmd;
 } cmd_info_T;
 
 class MyViewType{

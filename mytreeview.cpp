@@ -47,13 +47,13 @@ void MyTreeView::addItem(QTreeWidgetItem *item, dirEntryT *e){
 
     item->setText(0, QString::fromStdString(e->name));
     item->setIcon(0, base_icon);
-    if(e->type == e->DIR){
+    if(e->type == e->Type::DIR){
         item->setIcon(0, dir_icon);
         item->setFont(0, bold_font);
-    }else if(e->type == e->LINK){
+    }else if(e->type == e->Type::LINK){
         item->setFont(0, italic_font);
         item->setForeground(0, QBrush(QColor(255, 0, 0)));
-    }else if(e->type == e->ARCHIVE){
+    }else if(e->type == e->Type::ARCHIVE){
         item->setIcon(0, ar_icon);
         item->setFont(0, bold_font);
         item->setForeground(0, QBrush(QColor(255, 0, 255)));
@@ -61,7 +61,7 @@ void MyTreeView::addItem(QTreeWidgetItem *item, dirEntryT *e){
 
     item->setText(1, QString::fromStdString(e->type_name));
     item->setFont(1, italic_font);
-    if(e->type == e->DIR) item->setFont(0, bold_font);
+    if(e->type == e->Type::DIR) item->setFont(0, bold_font);
     ss << round((e->byte_size / pow(1024, data_instance->size_in)));
     addSizeInfo(ss);
     item->setText(2, QString::fromStdString(ss.str()));
@@ -101,7 +101,7 @@ void MyTreeView::buildTree(std::string root, QTreeWidgetItem *it, bool top){
             item = new QTreeWidgetItem(this);
         addItem(item, e);
         if(recursive && top){
-            if(e->type == e->DIR){
+            if(e->type == e->Type::DIR){
                 buildTree(root + OSInterface::dir_sep + e->name, item, false);
             }
         }
@@ -291,7 +291,6 @@ void MyTreeView::updateSelection(){
         }
     }
 }
-
 
 
 /* zmena vzhledu pri focusu */

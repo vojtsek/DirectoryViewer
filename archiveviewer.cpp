@@ -69,7 +69,8 @@ void ArchiveViewer::buildTree(QTreeWidgetItem *it, unsigned int idx){
         if((name.find('/') != std::string::npos) && (name.find(prefix) != 0)) break; // narazil na soubor, ktery uz nepatri pod tuto polozku - neobsahuje prefix (na zacatku)
         last = name[name.size() - 1];
         if(name != prefix)
-            name = name.substr(prefix.size(), name.size() - prefix.size() - 1);
+            name = (name.size() >= prefix.size() ) ?
+                        name.substr(prefix.size(), name.size() - prefix.size() - 1) : "";
         if(name.find('/') != std::string::npos) continue; // mezi prefixem a souborem je netrivialni cesta - tato polozka bude pripojena rekurzivne pozdeji
         name.push_back(last);
         if((name.find(prefix) == 0) | (tmp[tmp.size() - 1] == '/'))

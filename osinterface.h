@@ -3,9 +3,11 @@
 
 #include "myexceptions.h"
 #include "types.h"
+#include "worker.h"
 #include <map>
 #include <exception>
 #include <string>
+#include <thread>
 #include <QDate>
 
 
@@ -22,6 +24,7 @@ public:
 #endif
     OSInterface();
     void getDirInfo(std::string, std::string);
+    static void showInfo(std::string);
     static void copy(cmd_info_T &);
     static void move(cmd_info_T &);
     static void remove(cmd_info_T &);

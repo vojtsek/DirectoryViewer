@@ -1,9 +1,16 @@
 #include "osinterface.h"
 #include "functions.h"
 #include "mydialog.h"
+#include "types.h"
 
+#include <thread>
+#include <condition_variable>
+#include <mutex>
 #include <algorithm>
+#include <QTimer>
 #include <QMessageBox>
+#include <QProgressDialog>
+#include <QApplication>
 #include <unistd.h>
 #include <sstream>
 #include <fstream>
@@ -42,20 +49,24 @@ bool OSInterface::isOpenable(std::string path){
  */
 
 void OSInterface::copy(cmd_info_T &ci){
+    QMessageBox *msg_box;
+    std::shared_ptr<Data> data_instance = Data::getInstance();
     for(auto src : ci.source_files){
         for(auto dstf : ci.destination_files[src]){
-            try{
-                doCopy(src, dstf);
-                std::stringstream ss;
-                ss << "Copy " << src << " to: " << dstf << std::endl;
-                ss << "Success!";
-                std::string str = ss.str();
-                // MyDialog::MsgBox(str);
-            }catch(OSException *e){
-                e->process();
-            }
+            msg_box = new QMessageBox();
+            msg_box->setWindowTitle("copying file");
+            msg_box->setText(QString::fromStdString("copying\n" + src));
+            msg_box->setStandardButtons(QMessageBox::NoButton);
+
+            data_instance->thrs.emplace_back([&]() {try {std::this_thread::yield();  doCopy(src, dstf); } catch(OSException *e){} delete msg_box;});
+            msg_box->exec();
+            data_instance->thrs[0].join();
+            data_instance->thrs.clear();
         }
     }
+}
+void OSInterface::showInfo(std::string info){
+    MyDialog::MsgBox(info);
 }
 
 /* zpracuje strukturu cmd_info_T, provede presunuti souboru
@@ -63,18 +74,24 @@ void OSInterface::copy(cmd_info_T &ci){
  */
 
 void OSInterface::move(cmd_info_T &ci){
+    QMessageBox  *msg_box;
+    std::shared_ptr<Data> data_instance = Data::getInstance();
+    std::mutex mtx;
+    std::unique_lock<std::mutex> lck(mtx);
     for(auto src : ci.source_files){
         for(auto dstf : ci.destination_files[src]){
-            try{
-                doMove(src, dstf);
-                std::stringstream ss;
-                ss << "Move " << src << " to: " << dstf << std::endl;
-                ss << "Success!";
-                std::string str = ss.str();
-                // MyDialog::MsgBox(str);
-            }catch(OSException *e){
-                e->process();
-            }
+            msg_box = new QMessageBox();
+            msg_box->setWindowTitle("moving file");
+            msg_box->setText(QString::fromStdString("moving\n" + src));
+            msg_box->setStandardButtons(QMessageBox::NoButton);
+
+            data_instance->thrs.emplace_back([&]() {
+                try { doMove(src, dstf);
+                    while(!msg_box->isActiveWindow()) {std::this_thread::sleep_for (std::chrono::milliseconds(100)); }
+                }catch(OSException *e){} delete msg_box;});
+            msg_box->exec();
+            data_instance->thrs[0].join();
+            data_instance->thrs.clear();
         }
     }
 }
@@ -339,27 +356,27 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
         name = entry->d_name;
         de->ext_name = getExtension(name);
         if((name == ".") || name == "..") continue;
-        if((!matchExpression(name, pattern)) && !isDir(name)) continue;
+        if((!matchExpression(name, pattern)) && !isDir(abs_path + dir_sep + name)) continue;
         lstat((abs_path + dir_sep + name).c_str(), finfo);
         if(finfo == NULL)
             throw new OSException(name, std::string("failed to read file info."));
         de->name = name;
         if(S_ISREG(finfo->st_mode)){
-            de->type = de->FILE;
+            de->type = de->Type::FILE;
             de->type_name = "FILE";
         }else if(S_ISDIR(finfo->st_mode)){
-            de->type = de->DIR;
+            de->type = de->Type::DIR;
             de->type_name = "DIR";
         }else if(S_ISLNK(finfo->st_mode)){
-            de->type = de->LINK;
+            de->type = de->Type::LINK;
             de->type_name = "LINK";
         }else{
-            de->type = de->UNKNOWN;
+            de->type = de->Type::UNKNOWN;
             de->type_name = "UNKNOWN";
         }
         if(isArch(de->name)){
             de->type_name = "ARCHIVE";
-            de->type = de->ARCHIVE;
+            de->type = de->Type::ARCHIVE;
         }
         de->byte_size = finfo->st_size;
         char buf[255];
@@ -385,9 +402,9 @@ void OSInterface::getDirInfo(std::string path, std::string pattern){
     }
     closedir(dir);
     std::sort(dirs.begin(), dirs.end(),[=](dirEntryT *d1, dirEntryT *d2){
-        if ((d1->type == d1->DIR) && (d2->type != d2->DIR))
+        if ((d1->type == d1->Type::DIR) && (d2->type != d2->Type::DIR))
             return true;
-        else if ((d1->type != d1->DIR) && (d2->type == d2->DIR))
+        else if ((d1->type != d1->Type::DIR) && (d2->type == d2->Type::DIR))
             return false;
         else
             return d1->name < d2->name; });

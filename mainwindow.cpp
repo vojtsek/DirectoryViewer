@@ -78,9 +78,9 @@ void MainWindow::confirm1(std::string action, cmd_info_T &info){
     msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
     msg_box.setDefaultButton(QMessageBox::Yes);
     if(msg_box.exec() == QMessageBox::Yes){
-        if(info.cmd == info.COPY)
+        if(info.cmd == info.Cmd::COPY)
             OSInterface::copy(info);
-        else if(info.cmd == info.MOVE)
+        else if(info.cmd == info.Cmd::MOVE)
             OSInterface::move(info);
     }
 }
@@ -106,9 +106,9 @@ void MainWindow::confirm2(std::string action, cmd_info_T &info){
     msg_box.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
     msg_box.setDefaultButton(QMessageBox::Yes);
     if(msg_box.exec() == QMessageBox::Yes){
-        if(info.cmd == info.REMOVE)
+        if(info.cmd == info.Cmd::REMOVE)
             OSInterface::remove(info);
-        else if(info.cmd == info.RENAME)
+        else if(info.cmd == info.Cmd::RENAME)
             OSInterface::rename(info);
     }
 }

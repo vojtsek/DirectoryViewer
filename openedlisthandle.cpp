@@ -152,6 +152,9 @@ void OpenedListHandle::refresh(){
 /* slot, zmena vzoru */
 
 void OpenedListHandle::patternChanged(){
+    pattern = le2->text().toStdString();
+    os->dirs.clear();
+    os->getDirInfo(path, pattern);
     changeLayout(view_type);
 }
 
@@ -172,7 +175,8 @@ void OpenedListHandle::stepUp(){
         le1->setText(QString::fromStdString(cont));
     else
         le1->setText(QString::fromStdString(OSInterface::getPrefix()));
-    os->getDirInfo(path, "*");
+    os->dirs.clear();
+    os->getDirInfo(path, pattern);
     content->setFocus();
 }
 
@@ -187,7 +191,7 @@ void OpenedListHandle::pathChanged(){
         content->path = path;
         int idx(0);
         os->dirs.clear();
-        os->getDirInfo(path,"*");
+        os->getDirInfo(path, pattern);
         content->rebuild();
         if(!last_dir.empty())
             idx = content->getIdxOf(last_dir);
@@ -405,10 +409,10 @@ void OpenedListHandle::initLayout(std::string p){
 
 /* konstruktor */
 
-OpenedListHandle::OpenedListHandle(std::string p,QWidget *parent):QWidget(parent), os(new OSInterface), in_layout(false), path(p),view_type(LIST){
+OpenedListHandle::OpenedListHandle(std::string p,QWidget *parent):QWidget(parent), os(new OSInterface), in_layout(false), path(p), pattern("*"), view_type(LIST){
     last_layout = LIST;
     try{
-        os->getDirInfo(path, "*");
+        os->getDirInfo(path, pattern);
     }catch(OSException *e){
         std::cout << e->what() << std::endl;
     }

@@ -136,11 +136,19 @@ void MainHandler::refresh(OpenedListHandle *o){
  */
 
 void MainHandler::refreshLists(OpenedListHandle *src, bool all){
+    std::cout << "Refreshing" << std::endl;
+    src->os->dirs.clear();
+    src->os->getDirInfo(src->path, "*");
     src->content->multi_selection.clear();
     src->content->rebuild();
     if(all){
-        for(auto &a : opened_lists)
-            if((a->content->marked) || opened_lists.size() == 2) a->content->rebuild();
+        for(auto &a : opened_lists){
+            if((a->content->marked) || opened_lists.size() == 2){
+                a->os->dirs.clear();
+                a->os->getDirInfo(a->path, "*");
+                a->content->rebuild();
+            }
+        }
     }
 }
 
@@ -152,9 +160,9 @@ void MainHandler::refreshLists(OpenedListHandle *src, bool all){
 
 void MainHandler::copy(){
     cmd_info_T cmd_info;
-    cmd_info.cmd = cmd_info.COPY;
+    cmd_info.cmd = cmd_info.Cmd::COPY;
     bool is_dst, is_src;
-    OpenedListHandle *src;
+    OpenedListHandle *src = nullptr;
     prepare_cmd(cmd_info, is_src, is_dst, true, src);
     for(auto &a : cmd_info.paths){
         if(a == cmd_info.src_path){
@@ -173,8 +181,11 @@ void MainHandler::copy(){
         }
         if(!is_src){
             std::string err("No selected source files.");
-            emit(error(err));src->content->multi_selection.clear();
-            src->content->rebuild();
+            emit(error(err));
+            if(src){
+                src->content->multi_selection.clear();
+                src->content->rebuild();
+            }
         }
     }
 }
@@ -187,7 +198,7 @@ void MainHandler::copy(){
 
 void MainHandler::remove() {
     cmd_info_T cmd_info;
-    cmd_info.cmd = cmd_info.REMOVE;
+    cmd_info.cmd = cmd_info.Cmd::REMOVE;
     bool is_dst, is_src;
     OpenedListHandle *src;
     prepare_cmd(cmd_info, is_src, is_dst, false, src);
@@ -208,7 +219,7 @@ void MainHandler::remove() {
 
 void MainHandler::move() {
     cmd_info_T cmd_info;
-    cmd_info.cmd = cmd_info.MOVE;
+    cmd_info.cmd = cmd_info.Cmd::MOVE;
     bool is_dst, is_src;
     OpenedListHandle *src;
     prepare_cmd(cmd_info, is_src, is_dst, true, src);
@@ -298,6 +309,8 @@ void MainHandler::create() {
             try{
                 OSInterface::create(a->content->path + name);
             }catch(OSException *e) {e->process();}
+            a->os->dirs.clear();
+            a->os->getDirInfo(a->path, "*");
             a->content->rebuild();
         }
     }
